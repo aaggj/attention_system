@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="3">
   <name>gb_attention</name>
   <version>0.0.1</version>
   <description>Paquete de introducción de csuro (Curso Superior Universitario de Programación de Robots con ROS)</description>
@@ -10,34 +10,27 @@
 
   <author email="fmrico@gmail.com">Francisco Martín Rico</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>roscpp</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>gb_attention_msgs</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>control_msgs</build_depend>
-  <build_depend>bica_graph</build_depend>
-  <build_depend>actionlib</build_depend>
-  <build_depend>roslint</build_depend>
-  <build_depend>tf2</build_depend>
-  <build_depend>tf2_ros</build_depend>
-  <build_depend>tf2_geometry_msgs</build_depend>
-  <build_depend>trajectory_msgs</build_depend>
-
-  <run_depend>roscpp</run_depend>
-  <run_depend>std_msgs</run_depend>
-  <run_depend>gb_attention_msgs</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>control_msgs</run_depend>
-  <run_depend>bica_graph</run_depend>
-  <run_depend>actionlib</run_depend>
-  <run_depend>roslint</run_depend>
-  <run_depend>tf2</run_depend>
-  <run_depend>tf2_ros</run_depend>
-  <run_depend>tf2_geometry_msgs</run_depend>
-  <run_depend>trajectory_msgs</run_depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_cascade_lifecycle</depend>
+  <depend>lifecycle_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>gb_attention_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>ros2_knowledge_graph</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>ros2_knowledge_graph_plugins</depend>
+  
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
 
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
