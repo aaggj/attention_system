@@ -48,6 +48,8 @@ SimpleAttentionServerNode::SimpleAttentionServerNode()
 void
 SimpleAttentionServerNode::update()
 {
+  remove_expired_points();
+
   if (attention_points_.empty()) {
     return;
   }

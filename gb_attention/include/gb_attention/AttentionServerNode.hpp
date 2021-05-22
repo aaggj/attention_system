@@ -21,7 +21,6 @@
 #include <tf2_ros/transform_listener.h>
 
 #include "gb_attention_msgs/msg/attention_points.hpp"
-#include "gb_attention_msgs/srv/remove_attention_stimuli.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
@@ -41,6 +40,9 @@ struct AttentionPoint
 	float pitch;
 	int epoch;
   rclcpp::Time last_time_in_fovea;
+  rclcpp::Time last_update_ts;
+  rclcpp::Duration lifeness {0,0};
+  rclcpp::Duration time_in_point {0,0};
 };
 
 inline
@@ -53,6 +55,7 @@ public:
   void init();
 
 	virtual void update() = 0;
+  void print();
 
 protected:
   using CallbackReturnT =
@@ -72,16 +75,11 @@ protected:
 
 	virtual void update_points();
   void update_time_in_fovea();
+  void remove_expired_points();
 	void attention_point_callback(const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg);
 	void joint_state_callback(const sensor_msgs::msg::JointState::ConstSharedPtr msg);
-	void remove_stimuli_callback(
-    const std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Request> req,
-	  std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Response> res);
-
-	void remove_points(const std::string & class_id, const std::string & instance_id);
 
 	void init_join_state();
-	void print();
 	void publish_markers();
   
 	std::shared_ptr<tf2::BufferCore> tfBuffer_;
@@ -92,7 +90,6 @@ protected:
 
 	rclcpp::Subscription<gb_attention_msgs::msg::AttentionPoints>::SharedPtr attention_points_sub_;
 	rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
-	rclcpp::Service<gb_attention_msgs::srv::RemoveAttentionStimuli>::SharedPtr remove_instance_service_;
 
 	std::list<AttentionPoint> attention_points_;
 
@@ -105,9 +102,6 @@ protected:
 	float current_pitch_;
 	float goal_yaw_;
 	float goal_pitch_;
-
-	float time_in_point_;
-	float time_head_travel_;
 
   rclcpp::TimerBase::SharedPtr timer_;
 };

@@ -33,9 +33,6 @@ OptimizedAttentionServerNode::OptimizedAttentionServerNode()
 {
 	ts_sent_ = now() - rclcpp::Duration(5.0);
 	time_in_pos_ = now();
-
-  declare_parameter("time_in_point");
-	get_parameter_or("time_in_point", time_in_point_, time_in_point_);
 }
 
 void
@@ -50,8 +47,7 @@ OptimizedAttentionServerNode::update_points()
 void
 OptimizedAttentionServerNode::update()
 {
-
-  // std::cerr << "attention_points_: " << attention_points_.size() << std::endl;
+  remove_expired_points();
 
   if (attention_points_.empty()) {
     return;
@@ -91,9 +87,8 @@ OptimizedAttentionServerNode::update()
 		point.pitch = atan2(point_head_1.z(), point_head_1.x());
 	}
 
-
 	if ((now() - ts_sent_).seconds() > 5.0 ||
-		(now() - time_in_pos_).seconds() > (time_head_travel_ + time_in_point_))
+		(now() - time_in_pos_) > (rclcpp::Duration(1.0) + attention_points_.begin()->time_in_point))
   {
 		if ((now() - ts_sent_).seconds() > 10) {
 			RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");
@@ -105,9 +100,6 @@ OptimizedAttentionServerNode::update()
 
 		goal_yaw_ = std::max(-MAX_YAW, std::min(MAX_YAW, attention_points_.begin()->yaw));
 		goal_pitch_ = std::max(-MAX_PITCH, std::min(MAX_PITCH, attention_points_.begin()->pitch));
-
-		time_head_travel_ = fabs(current_yaw_ - goal_yaw_) + fabs(current_pitch_ - goal_pitch_);
-		time_head_travel_ = std::max(1.0f, time_head_travel_); // Minimun, 1 second
 
 		joint_cmd_.points[0].positions[0] = goal_yaw_;
 		joint_cmd_.points[0].positions[1] = goal_pitch_;

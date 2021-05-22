@@ -18,9 +18,14 @@
 #include "gb_attention/OptimizedAttentionServerNode.hpp"
 #include "gb_attention/RoundRobinAttentionServerNode.hpp"
 #include "gb_attention/SimpleAttentionServerNode.hpp"
-#include "gb_attention/AttentionClientNode.hpp"
-#include "ros2_knowledge_graph/GraphNode.hpp"
-#include "ros2_kg_tf_plugin/TFLayer.hpp"
+
+#include "gb_attention_msgs/msg/attention_points.hpp"
+
+#include "behaviortree_cpp_v3/behavior_tree.h"
+#include "behaviortree_cpp_v3/bt_factory.h"
+#include "behaviortree_cpp_v3/utils/shared_library.h"
+
+#include "tf2_ros/static_transform_broadcaster.h"
 
 #include "gtest/gtest.h"
 
@@ -39,16 +44,180 @@ public:
 
 };
 
-class AttentionClientNodeTest : public gb_attention::AttentionClientNode
-{
-public:
-  AttentionClientNodeTest(const std::string & name) : AttentionClientNode(name) {}
-  const std::map<std::string, std::list<geometry_msgs::msg::PointStamped>> & get_attention_points()
-  {
-    return attention_points_;
-  }
-};
 
+TEST(TerminalTestCase, test_scan_floor_near_node)
+{
+  auto test_node = rclcpp::Node::make_shared("test_node");
+  auto server_node = std::make_shared<OptimizedAttentionServerNodeTest>();
+
+  // Init frames, needed by attention
+  tf2_ros::StaticTransformBroadcaster tf_br(test_node);
+  geometry_msgs::msg::TransformStamped bf2bl_msg;
+  bf2bl_msg.header.frame_id = "base_link";
+  bf2bl_msg.header.stamp = test_node->now();
+  bf2bl_msg.child_frame_id = "base_footprint";
+  bf2bl_msg.transform.rotation.w = 1.0;
+  tf_br.sendTransform(bf2bl_msg);
+  bf2bl_msg.header.frame_id = "base_footprint";
+  bf2bl_msg.child_frame_id = "torso_lift_link";
+  bf2bl_msg.transform.translation.z = 1.5;
+  tf_br.sendTransform(bf2bl_msg);
+  bf2bl_msg.header.frame_id = "torso_lift_link";
+  bf2bl_msg.child_frame_id = "xtion_link";
+  bf2bl_msg.transform.translation.z = 0.5;
+  tf_br.sendTransform(bf2bl_msg);
+ 
+  std::vector<gb_attention_msgs::msg::AttentionPoints> attentions_points_sent;
+  auto attention_points_sub = test_node->create_subscription<gb_attention_msgs::msg::AttentionPoints>(
+    "attention/attention_points", 100,
+    [&attentions_points_sent] (const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
+      attentions_points_sent.push_back(*msg);
+    });
+
+  std::vector<trajectory_msgs::msg::JointTrajectory> joints_commands_sent;
+  auto joints_commands_sub = test_node->create_subscription<trajectory_msgs::msg::JointTrajectory>(
+    "/head_controller/command", 100,
+    [&joints_commands_sent] (const trajectory_msgs::msg::JointTrajectory::ConstSharedPtr msg) {
+      joints_commands_sent.push_back(*msg);
+    });
+
+  rclcpp::executors::SingleThreadedExecutor exe;
+  exe.add_node(test_node);
+  exe.add_node(server_node->get_node_base_interface());
+  
+  server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  exe.spin_some();
+  server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+  exe.spin_some();
+
+  BT::BehaviorTreeFactory factory;
+  BT::SharedLibrary loader;
+  factory.registerFromPlugin(loader.getOSName("gb_attention_scan_bt_node"));
+
+  auto blackboard = BT::Blackboard::create();
+  blackboard->set("node", test_node);
+
+  const std::string bt_xml = 
+    R"(<root main_tree_to_execute = "MainTree" >
+          <BehaviorTree ID="MainTree">
+            <Scan  name="scan" mode="floor_near"/>
+          </BehaviorTree>
+       </root>)";
+
+  BT::Tree tree = factory.createTreeFromText(bt_xml, blackboard);
+  
+  rclcpp::Rate rate(10);
+  rclcpp::Time start = test_node->now();
+  while (rclcpp::ok() && (test_node->now() - start).seconds() < 5.0) {
+    tree.rootNode()->executeTick();
+    rate.sleep();
+    exe.spin_some();
+    
+    ASSERT_EQ(attentions_points_sent.size(), 1u);
+    ASSERT_EQ(attentions_points_sent[0].attention_points.size(), 3u);
+    ASSERT_EQ(attentions_points_sent[0].instance_id, "floor_near");
+    attentions_points_sent.clear();
+    
+    ASSERT_EQ(server_node->get_attention_points().size(), 3u);
+  }
+  ASSERT_FALSE(joints_commands_sent.empty());
+
+  start = test_node->now();
+  while (rclcpp::ok() && (test_node->now() - start).seconds() < 1.0) {
+    rate.sleep();
+    exe.spin_some();
+  }
+  joints_commands_sent.clear();
+  ASSERT_EQ(server_node->get_attention_points().size(), 0u);
+
+  start = test_node->now();
+  while (rclcpp::ok() && (test_node->now() - start).seconds() < 1.0) {
+    rate.sleep();
+    exe.spin_some();
+  }
+  ASSERT_TRUE(joints_commands_sent.empty());
+}
+
+
+TEST(TerminalTestCase, test_track_node)
+{
+  auto test_node = rclcpp::Node::make_shared("test_node");
+  auto server_node = std::make_shared<OptimizedAttentionServerNodeTest>();
+
+  // Init frames, needed by attention
+  tf2_ros::StaticTransformBroadcaster tf_br(test_node);
+  geometry_msgs::msg::TransformStamped bf2bl_msg;
+  bf2bl_msg.header.frame_id = "base_link";
+  bf2bl_msg.header.stamp = test_node->now();
+  bf2bl_msg.child_frame_id = "base_footprint";
+  bf2bl_msg.transform.rotation.w = 1.0;
+  tf_br.sendTransform(bf2bl_msg);
+  bf2bl_msg.header.frame_id = "base_footprint";
+  bf2bl_msg.child_frame_id = "torso_lift_link";
+  bf2bl_msg.transform.translation.z = 1.5;
+  tf_br.sendTransform(bf2bl_msg);
+  bf2bl_msg.header.frame_id = "torso_lift_link";
+  bf2bl_msg.child_frame_id = "xtion_link";
+  bf2bl_msg.transform.translation.z = 0.5;
+  tf_br.sendTransform(bf2bl_msg);
+ 
+  std::vector<gb_attention_msgs::msg::AttentionPoints> attentions_points_sent;
+  auto attention_points_sub = test_node->create_subscription<gb_attention_msgs::msg::AttentionPoints>(
+    "attention/attention_points", 100,
+    [&attentions_points_sent] (const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
+      attentions_points_sent.push_back(*msg);
+    });
+
+  std::vector<trajectory_msgs::msg::JointTrajectory> joints_commands_sent;
+  auto joints_commands_sub = test_node->create_subscription<trajectory_msgs::msg::JointTrajectory>(
+    "/head_controller/command", 100,
+    [&joints_commands_sent] (const trajectory_msgs::msg::JointTrajectory::ConstSharedPtr msg) {
+      joints_commands_sent.push_back(*msg);
+    });
+
+  rclcpp::executors::SingleThreadedExecutor exe;
+  exe.add_node(test_node);
+  exe.add_node(server_node->get_node_base_interface());
+  
+  server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  exe.spin_some();
+  server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+  exe.spin_some();
+
+  BT::BehaviorTreeFactory factory;
+  BT::SharedLibrary loader;
+  factory.registerFromPlugin(loader.getOSName("gb_attention_track_bt_node"));
+
+  auto blackboard = BT::Blackboard::create();
+  blackboard->set("node", test_node);
+
+  geometry_msgs::msg::PointStamped point;
+  point.header.frame_id = "base_footprint";
+  point.point.x = 0.5;
+
+  const std::string bt_xml = 
+    R"(<root main_tree_to_execute = "MainTree" >
+          <BehaviorTree ID="MainTree">
+            <Track  name="track" mode="${point}"/>
+          </BehaviorTree>
+       </root>)";
+
+  BT::Tree tree = factory.createTreeFromText(bt_xml, blackboard);
+  
+  rclcpp::Rate rate(10);
+  rclcpp::Time start = test_node->now();
+  while (rclcpp::ok() && (test_node->now() - start).seconds() < 10.0) {
+    tree.rootNode()->executeTick();
+    rate.sleep();
+    exe.spin_some();
+    
+    point.point.x += 0.01;
+    point.header.stamp = test_node->now();
+    blackboard->set("point", point);
+  }
+}
+
+/*
 TEST(TerminalTestCase, test_client_simple)
 {
   auto test_node = rclcpp::Node::make_shared("test_node");
@@ -555,6 +724,7 @@ TEST(TerminalTestCase, test_server)
   exe.cancel();
   t.join();
 }
+*/
 
 int main(int argc, char ** argv)
 {

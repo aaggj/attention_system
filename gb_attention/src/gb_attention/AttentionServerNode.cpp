@@ -42,9 +42,7 @@ AttentionServerNode::AttentionServerNode(const std::string & name)
   tfBuffer_(nullptr),
 	tf_listener_(nullptr),
 	current_yaw_(0.0),
-	current_pitch_(0.0),
-	time_in_point_(1.5),
-	time_head_travel_(1.0)
+	current_pitch_(0.0)
 {
 }
 
@@ -57,15 +55,11 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
 	joint_cmd_pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>(
     "/head_controller/command", 100);
 	attention_points_sub_ = create_subscription<gb_attention_msgs::msg::AttentionPoints>(
-    "/attention/attention_points", 100, std::bind(&AttentionServerNode::attention_point_callback,
+    "attention/attention_points", 100, std::bind(&AttentionServerNode::attention_point_callback,
     this, _1));
 
 	joint_state_sub_ = create_subscription<sensor_msgs::msg::JointState>("/joint_states", 1,
 		std::bind(&AttentionServerNode::joint_state_callback, this, _1));
-
-	remove_instance_service_ = create_service<gb_attention_msgs::srv::RemoveAttentionStimuli>(
-    "/attention/remove_instances", std::bind(&AttentionServerNode::remove_stimuli_callback,
-    this, _1, _2));
 
 	markers_pub_ = create_publisher<visualization_msgs::msg::MarkerArray>("/attention_markers", 100);
 
@@ -103,7 +97,8 @@ AttentionServerNode::attention_point_callback(
 {
 	int point_counter = 0;
 	for (const auto & msg_point : msg->attention_points) {
-		std::string point_id = msg->class_id + "." + msg->instance_id + "." + std::to_string(point_counter++);
+    std::cerr << "Received " << msg->instance_id << std::endl;
+		std::string point_id = msg->instance_id + "." + std::to_string(point_counter++);
 
 		bool found = false;
 		std::list<AttentionPoint>::iterator it = attention_points_.begin();
@@ -114,6 +109,11 @@ AttentionServerNode::attention_point_callback(
 
 		if (found) {
 			fromMsg(msg_point, it->point);
+      it->lifeness = msg->lifeness;
+      it->time_in_point = msg->time_in_point;
+      it->last_update_ts = now();
+
+      std::cerr << "Updating " << it->point_id << std::endl;
 		} else {
 			AttentionPoint att_point;
 			att_point.point_id = point_id;
@@ -127,7 +127,13 @@ AttentionServerNode::attention_point_callback(
 			fromMsg(msg_point, att_point.point);
 
       att_point.last_time_in_fovea = now();
+      att_point.lifeness = msg->lifeness;
+      att_point.time_in_point = msg->time_in_point;
+      att_point.last_update_ts = now();
 			attention_points_.push_back(att_point);
+      std::cerr << "Adding new " << att_point.point_id << std::endl;
+
+
 		}
 	}
 }
@@ -169,14 +175,6 @@ AttentionServerNode::update_points()
 }
 
 void
-AttentionServerNode::remove_stimuli_callback(
-    const std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Request> req,
-	  std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Response> res)
-{
-	remove_points(req->class_id, req->instance_id);
-}
-
-void
 AttentionServerNode::joint_state_callback(const sensor_msgs::msg::JointState::ConstSharedPtr msg)
 {
   for (int i = 0; i < msg->name.size(); i++)
@@ -185,22 +183,6 @@ AttentionServerNode::joint_state_callback(const sensor_msgs::msg::JointState::Co
 			current_yaw_ = msg->position[i];
 		if (msg->name[i] == "head_2_joint")
 			current_pitch_ = msg->position[i];
-	}
-}
-
-
-void
-AttentionServerNode::remove_points(const std::string & class_id, const std::string & instance_id)
-{
-	std::string point_id = class_id + "." + instance_id;
-
-	auto it = attention_points_.begin();
-	while (it != attention_points_.end()) {
-		if (it->point_id.rfind(point_id, 0) == 0) { // If it->point_id starts with point_id
-			it = attention_points_.erase(it);
-    } else {
-			++it;
-    }
 	}
 }
 
@@ -217,7 +199,7 @@ AttentionServerNode::init_join_state()
   joint_cmd_.points[0].positions.resize(2);
   joint_cmd_.points[0].velocities.resize(2);
   joint_cmd_.points[0].accelerations.resize(2);
-  joint_cmd_.points[0].time_from_start = rclcpp::Duration(time_head_travel_);
+  joint_cmd_.points[0].time_from_start = rclcpp::Duration(1.0);  // 1 sec
 
   joint_cmd_.points[0].positions[0] = 0.0;
   joint_cmd_.points[0].positions[1] = 0.0;
@@ -333,9 +315,24 @@ AttentionServerNode::update_time_in_fovea() {
       point.last_time_in_fovea = now();
     }
 	}
-
 }
 
+void
+AttentionServerNode::remove_expired_points()
+{
+  auto it = attention_points_.begin();
+  while (it != attention_points_.end()) {
+    const AttentionPoint & point = *it;
+
+    if ((now() - point.last_update_ts) > point.lifeness) {
+      std::cerr << "Removed " << point.point_id << (now() - point.last_update_ts).seconds() << "=============" << std::endl;
+      
+      it = attention_points_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
 
 inline
 void fromMsg(const geometry_msgs::msg::PointStamped & in, tf2::Stamped<tf2::Vector3> & out)

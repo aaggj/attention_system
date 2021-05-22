@@ -44,13 +44,15 @@ RoundRobinAttentionServerNode::update_points()
 void
 RoundRobinAttentionServerNode::update()
 {
+  remove_expired_points();
+
   if (attention_points_.empty()) {
     return;
   }
 
   update_time_in_fovea();
 
-	if ((now() - time_in_pos_).seconds() > (time_head_travel_ + time_in_point_))
+	if ((now() - time_in_pos_) > (attention_points_.begin()->time_in_point + rclcpp::Duration(1.0)))
   {
 		attention_points_.begin()->epoch++;
 
