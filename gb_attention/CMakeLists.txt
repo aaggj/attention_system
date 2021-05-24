@@ -1,79 +1,95 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(gb_attention)
 
-add_compile_options(-std=c++11)
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Debug)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_cascade_lifecycle REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(gb_attention_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(trajectory_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(behaviortree_cpp_v3 REQUIRED)
+
+set(dependencies
+  rclcpp
+  rclcpp_cascade_lifecycle
+  lifecycle_msgs
   std_msgs
-  gb_attention_msgs
   geometry_msgs
-  control_msgs
-  bica_graph
-  actionlib
-  roslint
+  gb_attention_msgs
+  sensor_msgs
   tf2
   tf2_ros
   tf2_geometry_msgs
   trajectory_msgs
-)
-
-catkin_package(
-CATKIN_DEPENDS roscpp std_msgs
+  visualization_msgs
+  behaviortree_cpp_v3
 )
 
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME}
-  src/gb_attention/AttentionClient.cpp
-  src/gb_attention/AttentionServer.cpp
-  src/gb_attention/OptimizedAttentionServer.cpp
-  src/gb_attention/RoundRobinAttentionServer.cpp
-  src/gb_attention/SimpleAttentionServer.cpp
+add_library(${PROJECT_NAME} SHARED
+  src/gb_attention/AttentionServerNode.cpp
+  src/gb_attention/OptimizedAttentionServerNode.cpp
+  src/gb_attention/RoundRobinAttentionServerNode.cpp
+  src/gb_attention/SimpleAttentionServerNode.cpp
 )
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
-add_executable(attention_server_node src/attention_server_node.cpp)
-target_link_libraries(attention_server_node ${catkin_LIBRARIES} ${PROJECT_NAME})
+add_executable(attention_server src/attention_server.cpp)
+ament_target_dependencies(attention_server ${dependencies})
+target_link_libraries(attention_server ${PROJECT_NAME})
 
-add_executable(attention_client_node src/attention_client_node.cpp)
-target_link_libraries(attention_client_node ${catkin_LIBRARIES} ${PROJECT_NAME})
+add_library(gb_attention_scan_bt_node SHARED src/behavior_tree_nodes/Scan.cpp)
+list(APPEND plugin_libs gb_attention_scan_bt_node)
 
-add_executable(test_attention_node tests/test_attention_node.cpp)
-target_link_libraries(test_attention_node ${catkin_LIBRARIES} ${PROJECT_NAME})
+add_library(gb_attention_track_bt_node SHARED src/behavior_tree_nodes/Track.cpp)
+list(APPEND plugin_libs gb_attention_track_bt_node)
 
+foreach(bt_plugin ${plugin_libs})
+  ament_target_dependencies(${bt_plugin} ${dependencies})
+  target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
+endforeach()
 
-add_executable(head_test_simple_node src/head_test_simple_node.cpp)
-target_link_libraries(head_test_simple_node ${catkin_LIBRARIES} ${PROJECT_NAME})
-
-
-install(TARGETS attention_server_node ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
 
 install(DIRECTORY include/
-  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
+  DESTINATION include/
 )
 
-set(ROSLINT_CPP_OPTS "--filter=-whitespace/indent,-whitespace/tab,-runtime/references")
+install(DIRECTORY launch params DESTINATION share/${PROJECT_NAME})
 
-roslint_cpp(
-  src/gb_attention/AttentionClient.cpp include/gb_attention/AttentionClient.h
-  src/gb_attention/AttentionServer.cpp include/gb_attention/AttentionServer.h
-  src/attention_client_node.cpp
-  src/head_test_simple_node.cpp
-  src/attention_server_node.cpp
+install(TARGETS
+  ${PROJECT_NAME}
+  attention_server
+  ${plugin_libs}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  catkin_add_gtest(test_attention tests/test_attention.cpp)
-  target_link_libraries(test_attention ${catkin_LIBRARIES} ${PROJECT_NAME})
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_index_cpp REQUIRED)
+
+  add_subdirectory(tests)
 endif()
+
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(${dependencies})
+
+ament_package()

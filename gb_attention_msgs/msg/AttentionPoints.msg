@@ -1,3 +1,4 @@
-string class_id
 string instance_id
+builtin_interfaces/Duration lifeness
+builtin_interfaces/Duration time_in_point
 geometry_msgs/PointStamped[] attention_points

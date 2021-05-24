@@ -1,0 +1,51 @@
+// Copyright 2021 Intelligent Robotics Lab
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef GB_ATTENTION_SIMPLEATTENTIONSERVER_H
+#define GB_ATTENTION_SIMPLEATTENTIONSERVER_H
+
+#include <list>
+#include <string>
+
+#include "gb_attention/AttentionServerNode.hpp"
+
+#include "rclcpp/rclcpp.hpp"
+
+namespace gb_attention
+{
+
+class SimpleAttentionServerNode: public AttentionServerNode
+{
+public:
+	SimpleAttentionServerNode();
+
+	void update();
+
+protected:
+	void update_limits();
+
+	float max_yaw_, min_yaw_;
+	float max_pitch_, min_pitch_;
+
+	float direction_yaw_, direction_pitch_;
+
+	rclcpp::Time ts_sent_;
+	rclcpp::Duration duration_;
+  bool vertical_;
+  bool change_;
+};
+
+};  // namespace gb_attention
+
+#endif  // GB_ATTENTION_SIMPLEATTENTIONSERVER_H
