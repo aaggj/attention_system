@@ -97,6 +97,8 @@ AttentionServerNode::attention_point_callback(
 {
 	int point_counter = 0;
 	for (const auto & msg_point : msg->attention_points) {
+		std::string point_id = msg->instance_id + "." + std::to_string(point_counter++);
+
 		bool found = false;
 		std::list<AttentionPoint>::iterator it = attention_points_.begin();
 		while (it != attention_points_.end() && !found) {
