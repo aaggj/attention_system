@@ -97,9 +97,6 @@ AttentionServerNode::attention_point_callback(
 {
 	int point_counter = 0;
 	for (const auto & msg_point : msg->attention_points) {
-    std::cerr << "Received " << msg->instance_id << std::endl;
-		std::string point_id = msg->instance_id + "." + std::to_string(point_counter++);
-
 		bool found = false;
 		std::list<AttentionPoint>::iterator it = attention_points_.begin();
 		while (it != attention_points_.end() && !found) {
@@ -113,7 +110,6 @@ AttentionServerNode::attention_point_callback(
       it->time_in_point = msg->time_in_point;
       it->last_update_ts = now();
 
-      std::cerr << "Updating " << it->point_id << std::endl;
 		} else {
 			AttentionPoint att_point;
 			att_point.point_id = point_id;
@@ -131,9 +127,6 @@ AttentionServerNode::attention_point_callback(
       att_point.time_in_point = msg->time_in_point;
       att_point.last_update_ts = now();
 			attention_points_.push_back(att_point);
-      std::cerr << "Adding new " << att_point.point_id << std::endl;
-
-
 		}
 	}
 }
@@ -287,7 +280,6 @@ AttentionServerNode::print()
 
 void
 AttentionServerNode::update_time_in_fovea() {
-  //std::cerr << "=================" << std::endl;
   for (auto & point : attention_points_) {
 		geometry_msgs::msg::TransformStamped tf_msg;
 	  std::string error;
@@ -309,9 +301,6 @@ AttentionServerNode::update_time_in_fovea() {
 
     if (fabs(angle_x) < FOVEA_YAW && fabs(angle_y) < FOVEA_PITCH) {
       auto elapsed = (now() - point.last_time_in_fovea).seconds();
-      if (elapsed > 1.0) {
-        std::cerr << "Time since fovea [" << point.point_id << "] = " << elapsed << " secs \t[" << angle_x << ", " << angle_y << "]" << std::endl;
-      }
       point.last_time_in_fovea = now();
     }
 	}
@@ -325,8 +314,6 @@ AttentionServerNode::remove_expired_points()
     const AttentionPoint & point = *it;
 
     if ((now() - point.last_update_ts) > point.lifeness) {
-      std::cerr << "Removed " << point.point_id << (now() - point.last_update_ts).seconds() << "=============" << std::endl;
-      
       it = attention_points_.erase(it);
     } else {
       ++it;
