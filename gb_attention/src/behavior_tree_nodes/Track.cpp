@@ -52,14 +52,17 @@ Track::tick()
   rclcpp::Node::SharedPtr node;
   config().blackboard->get("node", node);
 
-  auto point = getInput<geometry_msgs::msg::PointStamped>("point");
+  auto pose = getInput<geometry_msgs::msg::PoseStamped>("pose");
 
-  if (point.has_value()) {
+  if (pose.has_value()) {
     auto points = std::make_unique<gb_attention_msgs::msg::AttentionPoints>();
     points->instance_id = "track";
     points->lifeness = rclcpp::Duration(0.5s);
     points->time_in_point = rclcpp::Duration(1s);
-    points->attention_points.push_back(point.value());
+    geometry_msgs::msg::PointStamped point;
+    point.header = pose.value().header;
+    point.point = pose.value().pose.position;
+    points->attention_points.push_back(point);
 
     points_pub_->publish(std::move(points));
   }
