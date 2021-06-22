@@ -56,7 +56,7 @@ Scan::tick()
 
   auto points = std::make_unique<gb_attention_msgs::msg::AttentionPoints>();
   points->lifeness = rclcpp::Duration(0.5s);
-  points->time_in_point = rclcpp::Duration(2s);
+  points->time_in_point = rclcpp::Duration(3s);
         
   geometry_msgs::msg::PointStamped point;
   point.header.frame_id = "base_footprint";
