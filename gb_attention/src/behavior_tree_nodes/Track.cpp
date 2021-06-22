@@ -62,6 +62,8 @@ Track::tick()
     geometry_msgs::msg::PointStamped point;
     point.header = pose.value().header;
     point.point = pose.value().pose.position;
+    // REMOVE AFTER THE ROBOCUP
+    point.point.z = point.point.z - 0.2;
     points->attention_points.push_back(point);
 
     points_pub_->publish(std::move(points));
