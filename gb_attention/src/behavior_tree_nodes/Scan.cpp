@@ -74,7 +74,16 @@ Scan::tick()
         point.point.y = -1.0;
         points->attention_points.push_back(point);
         points_pub_->publish(std::move(points));
-    }
+    } else if  (mode.value() == "up_down") {
+        points->instance_id = "up_down";
+        point.point.x = 1.0;
+        point.point.y = 0.0;
+        points->attention_points.push_back(point);
+        point.point.x = -1.0;
+        point.point.y = 0.0;
+        points->attention_points.push_back(point);
+        points_pub_->publish(std::move(points));
+    } 
   }
 
   return BT::NodeStatus::RUNNING;
