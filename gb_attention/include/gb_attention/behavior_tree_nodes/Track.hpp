@@ -22,6 +22,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "gb_attention_msgs/msg/attention_points.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
 namespace gb_attention
 {
@@ -39,7 +40,7 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<geometry_msgs::msg::PointStamped>("point")
+      BT::InputPort<geometry_msgs::msg::PoseStamped>("pose")
     };
   }
 
