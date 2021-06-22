@@ -74,12 +74,10 @@ Scan::tick()
       point.point.y = -1.0;
       points->attention_points.push_back(point);
       points_pub_->publish(std::move(points));
-    } else if (mode.value() == "shelving") {
-      points->instance_id = "shelving";
-      point.point.x = 0.5;
+    } else if (mode.value() == "shelf") {
+      points->instance_id = "shelf";
+      point.point.x = 1.3;
       point.point.y = 0.0;
-      point.point.z = 0.0;
-      points->attention_points.push_back(point);
       point.point.z = 0.5;
       points->attention_points.push_back(point);
       point.point.z = 1.0;
