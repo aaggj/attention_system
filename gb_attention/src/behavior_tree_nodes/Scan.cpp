@@ -65,15 +65,28 @@ Scan::tick()
 
   if (mode.has_value()) {
     if (mode.value() == "floor_near") {
-        points->instance_id = "floor_near";
-        point.point.x = 1.0;
-        point.point.y = 0.0;
-        points->attention_points.push_back(point);
-        point.point.y = 1.0;
-        points->attention_points.push_back(point);
-        point.point.y = -1.0;
-        points->attention_points.push_back(point);
-        points_pub_->publish(std::move(points));
+      points->instance_id = "floor_near";
+      point.point.x = 1.0;
+      point.point.y = 0.0;
+      points->attention_points.push_back(point);
+      point.point.y = 1.0;
+      points->attention_points.push_back(point);
+      point.point.y = -1.0;
+      points->attention_points.push_back(point);
+      points_pub_->publish(std::move(points));
+    } else if (mode.value() == "shelving") {
+      points->instance_id = "shelving";
+      point.point.x = 0.5;
+      point.point.y = 0.0;
+      point.point.z = 0.0;
+      points->attention_points.push_back(point);
+      point.point.z = 0.5;
+      points->attention_points.push_back(point);
+      point.point.z = 1.0;
+      points->attention_points.push_back(point);
+      point.point.z = 1.5;
+      points->attention_points.push_back(point);
+      points_pub_->publish(std::move(points));
     }
   }
 
