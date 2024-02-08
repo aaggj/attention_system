@@ -15,7 +15,7 @@
 #include <string>
 #include <list>
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "visualization_msgs/msg/marker_array.hpp"
 
@@ -34,7 +34,7 @@ namespace gb_attention
 using namespace std::chrono_literals;
 
 SimpleAttentionServerNode::SimpleAttentionServerNode()
-: duration_(0)
+: duration_{1, 0}
 {
 	direction_yaw_ = 1.0f;
 	direction_pitch_ = 1.0f;

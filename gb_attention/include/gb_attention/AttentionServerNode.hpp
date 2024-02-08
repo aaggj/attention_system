@@ -35,7 +35,7 @@ namespace gb_attention
 struct AttentionPoint
 {
 	std::string point_id;
-	tf2::Stamped<tf2::Vector3> point;
+	geometry_msgs::msg::PointStamped point;
 	float yaw;
 	float pitch;
 	int epoch;

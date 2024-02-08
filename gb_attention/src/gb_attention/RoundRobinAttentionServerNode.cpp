@@ -15,7 +15,7 @@
 #include <string>
 #include <list>
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "visualization_msgs/msg/marker_array.hpp"
 
@@ -52,7 +52,7 @@ RoundRobinAttentionServerNode::update()
 
   update_time_in_fovea();
 
-	if ((now() - time_in_pos_) > (attention_points_.begin()->time_in_point + rclcpp::Duration(1.0)))
+	if ((now() - time_in_pos_) > (attention_points_.begin()->time_in_point + rclcpp::Duration(1, 0)))
   {
 		attention_points_.begin()->epoch++;
 

@@ -15,7 +15,7 @@
 #include <string>
 #include <list>
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "visualization_msgs/msg/marker_array.hpp"
 
@@ -31,7 +31,7 @@ using namespace std::chrono_literals;
 
 OptimizedAttentionServerNode::OptimizedAttentionServerNode()
 {
-	ts_sent_ = now() - rclcpp::Duration(5.0);
+	ts_sent_ = now() - rclcpp::Duration(5, 0);
 	time_in_pos_ = now();
 }
 
@@ -88,7 +88,7 @@ OptimizedAttentionServerNode::update()
 	}
 
 	if ((now() - ts_sent_).seconds() > 5.0 ||
-		(now() - time_in_pos_) > (rclcpp::Duration(1.0) + attention_points_.begin()->time_in_point))
+		(now() - time_in_pos_) > (rclcpp::Duration(1, 0) + attention_points_.begin()->time_in_point))
   {
 		if ((now() - ts_sent_).seconds() > 10) {
 			RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");

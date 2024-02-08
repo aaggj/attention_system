@@ -19,7 +19,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer_interface.h>
 #include <tf2/convert.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include "visualization_msgs/msg/marker_array.hpp"
@@ -194,7 +194,7 @@ AttentionServerNode::init_join_state()
   joint_cmd_.points[0].positions.resize(2);
   joint_cmd_.points[0].velocities.resize(2);
   joint_cmd_.points[0].accelerations.resize(2);
-  joint_cmd_.points[0].time_from_start = rclcpp::Duration(1.0);  // 1 sec
+  joint_cmd_.points[0].time_from_start = rclcpp::Duration(1, 0);  // 1 sec
 
   joint_cmd_.points[0].positions[0] = 0.0;
   joint_cmd_.points[0].positions[1] = 0.0;
