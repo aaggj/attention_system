@@ -39,7 +39,7 @@ def generate_launch_description():
 
     attention_manager_cmd = Node(
         package='gb_attention',
-        executable='attention_manager',
+        executable='attention_server',
         output='screen',
         namespace=namespace,
         parameters=[

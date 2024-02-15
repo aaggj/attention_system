@@ -92,11 +92,26 @@ OptimizedAttentionServerNode::update()
   {
 		if ((now() - ts_sent_).seconds() > 10) {
 			RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");
+			RCLCPP_INFO(get_logger(), "Current time: %f", (now() - ts_sent_).seconds());
+			RCLCPP_INFO(get_logger(), "Now time: %f", now().seconds());
+			RCLCPP_INFO(get_logger(), "ts_sent_ time: %f", ts_sent_.seconds());
+			
     }
 
 		attention_points_.begin()->epoch++;
+
+		double x = attention_points_.begin()->point[0];
+		double y = attention_points_.begin()->point[1];
+		double z = attention_points_.begin()->point[2];
+
+		RCLCPP_INFO(this->get_logger(), "Punto x: %f, y: %f, z: %f", x, y, z);
+		RCLCPP_INFO(get_logger(), "1st point id : %s", attention_points_.begin()->point.frame_id_.c_str());
+
 		update_points();
+		RCLCPP_INFO(get_logger(), "Points updated");
 		publish_markers();
+
+		RCLCPP_INFO(get_logger(), "Markers published");
 
 		goal_yaw_ = std::max(-MAX_YAW, std::min(MAX_YAW, attention_points_.begin()->yaw));
 		goal_pitch_ = std::max(-MAX_PITCH, std::min(MAX_PITCH, attention_points_.begin()->pitch));
@@ -107,6 +122,7 @@ OptimizedAttentionServerNode::update()
 		// joint_cmd_.header.stamp = now() + rclcpp::Duration(1s) ;  // Disabled in sim
 		ts_sent_ = now();
 		joint_cmd_pub_->publish(joint_cmd_);
+		RCLCPP_INFO(get_logger(), "joint_cmd: %f, %f", joint_cmd_.points[0].positions[0], joint_cmd_.points[0].positions[1]);
 	}
 
 	if (fabs(current_yaw_ - goal_yaw_) > FOVEA_YAW ||
@@ -114,6 +130,7 @@ OptimizedAttentionServerNode::update()
   {
 		time_in_pos_ = now();
   }
+  RCLCPP_INFO(get_logger(), "OptimizedAttentionServerNode::update() end");
 }
 
 

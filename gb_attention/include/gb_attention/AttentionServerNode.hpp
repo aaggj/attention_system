@@ -19,6 +19,7 @@
 #include <string>
 
 #include <tf2_ros/transform_listener.h>
+#include <tf2/transform_datatypes.h>
 
 #include "gb_attention_msgs/msg/attention_points.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
@@ -29,13 +30,14 @@
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_cascade_lifecycle/rclcpp_cascade_lifecycle.hpp"
 
+
 namespace gb_attention
 {
 
 struct AttentionPoint
 {
 	std::string point_id;
-	geometry_msgs::msg::PointStamped point;
+	tf2::Stamped<tf2::Vector3> point;
 	float yaw;
 	float pitch;
 	int epoch;

@@ -53,7 +53,7 @@ CallbackReturnT
 AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
 {
 	joint_cmd_pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>(
-    "/head_controller/command", 100);
+    "/head_controller/joint_trajectory", 100);
 	attention_points_sub_ = create_subscription<gb_attention_msgs::msg::AttentionPoints>(
     "attention/attention_points", 100, std::bind(&AttentionServerNode::attention_point_callback,
     this, _1));
@@ -69,6 +69,7 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tfBuffer_, shared_from_this(), false);
 
 	init_join_state();
+  RCLCPP_INFO(get_logger(), "AttentionServerNode configured");
   return CascadeLifecycleNode::on_configure(state);
 }
 
@@ -80,6 +81,7 @@ AttentionServerNode::on_activate(const rclcpp_lifecycle::State & state)
   joint_cmd_pub_->on_activate();
   markers_pub_->on_activate();
 
+  RCLCPP_INFO(get_logger(), "AttentionServerNode activated");
   return CascadeLifecycleNode::on_activate(state);
 }
 
@@ -209,6 +211,7 @@ void
 AttentionServerNode::publish_markers()
 {
 	if (markers_pub_->get_subscription_count() == 0) {
+		RCLCPP_INFO(get_logger(), "No subscribers to markers");
 		return;
   }
 
@@ -218,7 +221,7 @@ AttentionServerNode::publish_markers()
 	visualization_msgs::msg::MarkerArray msg;
 	visualization_msgs::msg::Marker att_marker;
 
-	att_marker.header.frame_id = "xtion_link";
+	att_marker.header.frame_id = "head_front_camera_link";
 	att_marker.header.stamp = now();
 	att_marker.ns = get_name();
 	att_marker.id = 0;
@@ -240,10 +243,10 @@ AttentionServerNode::publish_markers()
 
 	geometry_msgs::msg::TransformStamped tf_msg;
 	std::string error;
-	if (tfBuffer_->canTransform(end_point.frame_id_, "xtion_link",
+	if (tfBuffer_->canTransform(end_point.frame_id_, "head_front_camera_link",
 		tf2::TimePointZero, &error))
   {
-		tf_msg = tfBuffer_->lookupTransform(end_point.frame_id_, "xtion_link", tf2::TimePointZero);
+		tf_msg = tfBuffer_->lookupTransform(end_point.frame_id_, "head_front_camera_link", tf2::TimePointZero);
 	} else {
 		RCLCPP_ERROR(get_logger(), "Can't transform %s", error.c_str());
 	}
@@ -285,8 +288,8 @@ AttentionServerNode::update_time_in_fovea() {
   for (auto & point : attention_points_) {
 		geometry_msgs::msg::TransformStamped tf_msg;
 	  std::string error;
-	  if (tfBuffer_->canTransform(point.point.frame_id_, "xtion_link", tf2::TimePointZero, &error)) {
-		  tf_msg = tfBuffer_->lookupTransform(point.point.frame_id_, "xtion_link", tf2::TimePointZero);
+	  if (tfBuffer_->canTransform(point.point.frame_id_, "head_front_camera_link", tf2::TimePointZero, &error)) {
+		  tf_msg = tfBuffer_->lookupTransform(point.point.frame_id_, "head_front_camera_link", tf2::TimePointZero);
 	  } else {
 		  RCLCPP_ERROR(get_logger(), "Can't transform %s", error.c_str());
 	  }
