@@ -17,7 +17,7 @@
 
 #include "lifecycle_msgs/msg/transition.hpp"
 
-#include "gb_attention/OptimizedAttentionServerNode.hpp"
+#include "attention_system/OptimizedAttentionServerNode.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
   
-  auto attention_server_node = std::make_shared<gb_attention::OptimizedAttentionServerNode>();
+  auto attention_server_node = std::make_shared<attention_system::OptimizedAttentionServerNode>();
   RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode created");
 
   attention_server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);

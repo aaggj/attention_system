@@ -19,11 +19,11 @@
 
 #include "visualization_msgs/msg/marker_array.hpp"
 
-#include "gb_attention/RoundRobinAttentionServerNode.hpp"
+#include "attention_system/RoundRobinAttentionServerNode.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace gb_attention
+namespace attention_system
 {
 
 using namespace std::chrono_literals;
@@ -77,4 +77,4 @@ RoundRobinAttentionServerNode::update()
 }
 
 
-};  // namespace gb_attention
+};  // namespace attention_system

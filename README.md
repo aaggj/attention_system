@@ -1,5 +1,5 @@
-# gb_attention
+# attention_system
 
-[![Build Status](https://travis-ci.com/IntelligentRoboticsLabs/gb_attention.svg?branch=master)](https://travis-ci.com/IntelligentRoboticsLabs/gb_attention)
+[![Build Status](https://travis-ci.com/aaggj/attention_system.svg?branch=humble)](https://travis-ci.com/aaggj/attention_system)
 
 This is the attention module of Gentlebot team for SCiROC challenge

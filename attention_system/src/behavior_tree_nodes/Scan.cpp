@@ -19,12 +19,12 @@
 #include <vector>
 #include <memory>
 
-#include "gb_attention/behavior_tree_nodes/Scan.hpp"
-#include "gb_attention_msgs/msg/attention_points.hpp"
+#include "attention_system/behavior_tree_nodes/Scan.hpp"
+#include "attention_system_msgs/msg/attention_points.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace gb_attention
+namespace attention_system
 {
 
 using namespace std::chrono_literals;
@@ -37,7 +37,7 @@ Scan::Scan(
   rclcpp::Node::SharedPtr node;
   config().blackboard->get("node", node);
 
-  points_pub_ = node->create_publisher<gb_attention_msgs::msg::AttentionPoints>(
+  points_pub_ = node->create_publisher<attention_system_msgs::msg::AttentionPoints>(
     "attention/attention_points", 100);
 }
 
@@ -54,7 +54,7 @@ Scan::tick()
 
   auto mode = getInput<std::string>("mode");
 
-  auto points = std::make_unique<gb_attention_msgs::msg::AttentionPoints>();
+  auto points = std::make_unique<attention_system_msgs::msg::AttentionPoints>();
   points->lifeness = rclcpp::Duration(0.5s);
   points->time_in_point = rclcpp::Duration(3s);
         
@@ -96,5 +96,5 @@ Scan::tick()
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<gb_attention::Scan>("Scan");
+  factory.registerNodeType<attention_system::Scan>("Scan");
 }

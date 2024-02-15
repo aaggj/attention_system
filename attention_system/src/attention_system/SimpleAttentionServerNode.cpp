@@ -19,12 +19,12 @@
 
 #include "visualization_msgs/msg/marker_array.hpp"
 
-#include "gb_attention/SimpleAttentionServerNode.hpp"
+#include "attention_system/SimpleAttentionServerNode.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
 
-namespace gb_attention
+namespace attention_system
 {
 
 #define DIST_TOL	0.02
@@ -180,4 +180,4 @@ SimpleAttentionServerNode::update_limits()
 }
 
 
-};  // namespace gb_attention
+};  // namespace attention_system

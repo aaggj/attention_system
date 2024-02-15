@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GB_ATTENTION__BEHAVIOR_TREE_NODES__SCAN_HPP_
-#define GB_ATTENTION__BEHAVIOR_TREE_NODES__SCAN_HPP_
+#ifndef ATTENTION_SYSTEM__BEHAVIOR_TREE_NODES__SCAN_HPP_
+#define ATTENTION_SYSTEM__BEHAVIOR_TREE_NODES__SCAN_HPP_
 
 #include <string>
 
@@ -21,9 +21,9 @@
 #include "behaviortree_cpp_v3/bt_factory.h"
 
 #include "rclcpp/rclcpp.hpp"
-#include "gb_attention_msgs/msg/attention_points.hpp"
+#include "attention_system_msgs/msg/attention_points.hpp"
 
-namespace gb_attention
+namespace attention_system
 {
 
 class Scan : public BT::ActionNodeBase
@@ -44,9 +44,9 @@ public:
   }
 
 private:
-  rclcpp::Publisher<gb_attention_msgs::msg::AttentionPoints>::SharedPtr points_pub_;
+  rclcpp::Publisher<attention_system_msgs::msg::AttentionPoints>::SharedPtr points_pub_;
 };
 
-}  // namespace gb_attention
+}  // namespace attention_system
 
-#endif  // GB_ATTENTION__BEHAVIOR_TREE_NODES__SCAN_HPP_
+#endif  // ATTENTION_SYSTEM__BEHAVIOR_TREE_NODES__SCAN_HPP_

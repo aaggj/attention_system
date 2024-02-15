@@ -19,12 +19,12 @@
 
 #include "visualization_msgs/msg/marker_array.hpp"
 
-#include "gb_attention/OptimizedAttentionServerNode.hpp"
+#include "attention_system/OptimizedAttentionServerNode.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
 
-namespace gb_attention
+namespace attention_system
 {
 
 using namespace std::chrono_literals;
@@ -134,4 +134,4 @@ OptimizedAttentionServerNode::update()
 }
 
 
-};  // namespace gb_attention
+};  // namespace attention_system

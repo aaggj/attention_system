@@ -15,11 +15,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
-#include "gb_attention/OptimizedAttentionServerNode.hpp"
-#include "gb_attention/RoundRobinAttentionServerNode.hpp"
-#include "gb_attention/SimpleAttentionServerNode.hpp"
+#include "attention_system/OptimizedAttentionServerNode.hpp"
+#include "attention_system/RoundRobinAttentionServerNode.hpp"
+#include "attention_system/SimpleAttentionServerNode.hpp"
 
-#include "gb_attention_msgs/msg/attention_points.hpp"
+#include "attention_system_msgs/msg/attention_points.hpp"
 
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
@@ -29,15 +29,15 @@
 
 #include "gtest/gtest.h"
 
-class OptimizedAttentionServerNodeTest : public gb_attention::OptimizedAttentionServerNode
+class OptimizedAttentionServerNodeTest : public attention_system::OptimizedAttentionServerNode
 {
 public:
-  const std::list<gb_attention::AttentionPoint> & get_attention_points()
+  const std::list<attention_system::AttentionPoint> & get_attention_points()
   {
     return attention_points_;
   }
 
-  void attention_point_callback(const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg)
+  void attention_point_callback(const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg)
   {
     
   }
@@ -67,10 +67,10 @@ TEST(TerminalTestCase, test_scan_floor_near_node)
   bf2bl_msg.transform.translation.z = 0.5;
   tf_br.sendTransform(bf2bl_msg);
  
-  std::vector<gb_attention_msgs::msg::AttentionPoints> attentions_points_sent;
-  auto attention_points_sub = test_node->create_subscription<gb_attention_msgs::msg::AttentionPoints>(
+  std::vector<attention_system_msgs::msg::AttentionPoints> attentions_points_sent;
+  auto attention_points_sub = test_node->create_subscription<attention_system_msgs::msg::AttentionPoints>(
     "attention/attention_points", 100,
-    [&attentions_points_sent] (const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
+    [&attentions_points_sent] (const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
       attentions_points_sent.push_back(*msg);
     });
 
@@ -92,7 +92,7 @@ TEST(TerminalTestCase, test_scan_floor_near_node)
 
   BT::BehaviorTreeFactory factory;
   BT::SharedLibrary loader;
-  factory.registerFromPlugin(loader.getOSName("gb_attention_scan_bt_node"));
+  factory.registerFromPlugin(loader.getOSName("attention_system_scan_bt_node"));
 
   auto blackboard = BT::Blackboard::create();
   blackboard->set("node", test_node);
@@ -161,10 +161,10 @@ TEST(TerminalTestCase, test_track_node)
   bf2bl_msg.transform.translation.z = 0.5;
   tf_br.sendTransform(bf2bl_msg);
  
-  std::vector<gb_attention_msgs::msg::AttentionPoints> attentions_points_sent;
-  auto attention_points_sub = test_node->create_subscription<gb_attention_msgs::msg::AttentionPoints>(
+  std::vector<attention_system_msgs::msg::AttentionPoints> attentions_points_sent;
+  auto attention_points_sub = test_node->create_subscription<attention_system_msgs::msg::AttentionPoints>(
     "attention/attention_points", 100,
-    [&attentions_points_sent] (const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
+    [&attentions_points_sent] (const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
       attentions_points_sent.push_back(*msg);
     });
 
@@ -186,7 +186,7 @@ TEST(TerminalTestCase, test_track_node)
 
   BT::BehaviorTreeFactory factory;
   BT::SharedLibrary loader;
-  factory.registerFromPlugin(loader.getOSName("gb_attention_track_bt_node"));
+  factory.registerFromPlugin(loader.getOSName("attention_system_track_bt_node"));
 
   auto blackboard = BT::Blackboard::create();
   blackboard->set("node", test_node);
@@ -242,22 +242,22 @@ TEST(TerminalTestCase, test_client_simple)
       "-0.4, -0.6, 1.00"
     }});
 
-  std::vector<gb_attention_msgs::msg::AttentionPoints> attentions_points_sent;
-  auto attention_points_sub = test_node->create_subscription<gb_attention_msgs::msg::AttentionPoints>(
+  std::vector<attention_system_msgs::msg::AttentionPoints> attentions_points_sent;
+  auto attention_points_sub = test_node->create_subscription<attention_system_msgs::msg::AttentionPoints>(
     "/attention/attention_points", 100,
-    [&attentions_points_sent] (const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
+    [&attentions_points_sent] (const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
       attentions_points_sent.push_back(*msg);
     });
 
-  std::vector<gb_attention_msgs::srv::RemoveAttentionStimuli_Request> remove_attention_points_reqs;
-  auto remove_point_srv = test_node->create_service<gb_attention_msgs::srv::RemoveAttentionStimuli>(
+  std::vector<attention_system_msgs::srv::RemoveAttentionStimuli_Request> remove_attention_points_reqs;
+  auto remove_point_srv = test_node->create_service<attention_system_msgs::srv::RemoveAttentionStimuli>(
     "/attention/remove_instances", [&remove_attention_points_reqs] 
-      (const std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Request> req,
-	    std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Response> res) {
+      (const std::shared_ptr<attention_system_msgs::srv::RemoveAttentionStimuli::Request> req,
+	    std::shared_ptr<attention_system_msgs::srv::RemoveAttentionStimuli::Response> res) {
         remove_attention_points_reqs.push_back(*req);
       });
 
-  std::string pkgpath = ament_index_cpp::get_package_share_directory("gb_attention");
+  std::string pkgpath = ament_index_cpp::get_package_share_directory("attention_system");
 
   rclcpp::executors::SingleThreadedExecutor exe;
 
@@ -412,22 +412,22 @@ TEST(TerminalTestCase, test_client_options)
       "2, 2, 2"
     }});
 
-  std::vector<gb_attention_msgs::msg::AttentionPoints> attentions_points_sent;
-  auto attention_points_sub = test_node->create_subscription<gb_attention_msgs::msg::AttentionPoints>(
+  std::vector<attention_system_msgs::msg::AttentionPoints> attentions_points_sent;
+  auto attention_points_sub = test_node->create_subscription<attention_system_msgs::msg::AttentionPoints>(
     "/attention/attention_points", 100,
-    [&attentions_points_sent] (const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
+    [&attentions_points_sent] (const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
       attentions_points_sent.push_back(*msg);
     });
 
-  std::vector<gb_attention_msgs::srv::RemoveAttentionStimuli_Request> remove_attention_points_reqs;
-  auto remove_point_srv = test_node->create_service<gb_attention_msgs::srv::RemoveAttentionStimuli>(
+  std::vector<attention_system_msgs::srv::RemoveAttentionStimuli_Request> remove_attention_points_reqs;
+  auto remove_point_srv = test_node->create_service<attention_system_msgs::srv::RemoveAttentionStimuli>(
     "/attention/remove_instances", [&remove_attention_points_reqs] 
-      (const std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Request> req,
-	    std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Response> res) {
+      (const std::shared_ptr<attention_system_msgs::srv::RemoveAttentionStimuli::Request> req,
+	    std::shared_ptr<attention_system_msgs::srv::RemoveAttentionStimuli::Response> res) {
         remove_attention_points_reqs.push_back(*req);
       });
 
-  std::string pkgpath = ament_index_cpp::get_package_share_directory("gb_attention");
+  std::string pkgpath = ament_index_cpp::get_package_share_directory("attention_system");
 
   rclcpp::executors::SingleThreadedExecutor exe;
 
@@ -603,10 +603,10 @@ TEST(TerminalTestCase, test_server)
   attention_client->set_parameter({"table_special", std::vector<std::string>{
       "0, -1, 1"
     }});
-  std::vector<gb_attention_msgs::msg::AttentionPoints> attentions_points_sent;
-  auto attention_points_sub = test_node->create_subscription<gb_attention_msgs::msg::AttentionPoints>(
+  std::vector<attention_system_msgs::msg::AttentionPoints> attentions_points_sent;
+  auto attention_points_sub = test_node->create_subscription<attention_system_msgs::msg::AttentionPoints>(
     "/attention/attention_points", 100,
-    [&attentions_points_sent] (const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
+    [&attentions_points_sent] (const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg) {
       attentions_points_sent.push_back(*msg);
     });
 
@@ -617,15 +617,15 @@ TEST(TerminalTestCase, test_server)
       neck_commands.push_back(*msg);
     });
 
-  std::vector<gb_attention_msgs::srv::RemoveAttentionStimuli_Request> remove_attention_points_reqs;
-  auto remove_point_srv = test_node->create_service<gb_attention_msgs::srv::RemoveAttentionStimuli>(
+  std::vector<attention_system_msgs::srv::RemoveAttentionStimuli_Request> remove_attention_points_reqs;
+  auto remove_point_srv = test_node->create_service<attention_system_msgs::srv::RemoveAttentionStimuli>(
     "/attention/remove_instances", [&remove_attention_points_reqs] 
-      (const std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Request> req,
-	    std::shared_ptr<gb_attention_msgs::srv::RemoveAttentionStimuli::Response> res) {
+      (const std::shared_ptr<attention_system_msgs::srv::RemoveAttentionStimuli::Request> req,
+	    std::shared_ptr<attention_system_msgs::srv::RemoveAttentionStimuli::Response> res) {
         remove_attention_points_reqs.push_back(*req);
       });
 
-  std::string pkgpath = ament_index_cpp::get_package_share_directory("gb_attention");
+  std::string pkgpath = ament_index_cpp::get_package_share_directory("attention_system");
 
   rclcpp::executors::SingleThreadedExecutor exe;
 

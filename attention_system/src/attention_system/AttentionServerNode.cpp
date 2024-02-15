@@ -25,11 +25,11 @@
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "geometry_msgs/msg/point_stamped.hpp"
 
-#include "gb_attention/AttentionServerNode.hpp"
+#include "attention_system/AttentionServerNode.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace gb_attention
+namespace attention_system
 {
 
 using std::placeholders::_1;
@@ -54,7 +54,7 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
 {
 	joint_cmd_pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>(
     "/head_controller/joint_trajectory", 100);
-	attention_points_sub_ = create_subscription<gb_attention_msgs::msg::AttentionPoints>(
+	attention_points_sub_ = create_subscription<attention_system_msgs::msg::AttentionPoints>(
     "attention/attention_points", 100, std::bind(&AttentionServerNode::attention_point_callback,
     this, _1));
 
@@ -95,7 +95,7 @@ AttentionServerNode::on_deactivate(const rclcpp_lifecycle::State & state)
 
 void
 AttentionServerNode::attention_point_callback(
-  const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg)
+  const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg)
 {
 	int point_counter = 0;
 	for (const auto & msg_point : msg->attention_points) {
@@ -337,4 +337,4 @@ void fromMsg(const geometry_msgs::msg::PointStamped & in, tf2::Stamped<tf2::Vect
 }
 
 
-};  // namespace gb_attention
+};  // namespace attention_system

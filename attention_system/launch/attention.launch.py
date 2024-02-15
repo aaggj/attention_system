@@ -23,7 +23,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    bringup_dir = get_package_share_directory('gb_attention')
+    bringup_dir = get_package_share_directory('attention_system')
     config_dir = os.path.join(bringup_dir, 'params')
     config_file = os.path.join(config_dir, 'attention_config.yaml')
 
@@ -38,7 +38,7 @@ def generate_launch_description():
         description='Namespace')
 
     attention_manager_cmd = Node(
-        package='gb_attention',
+        package='attention_system',
         executable='attention_server',
         output='screen',
         namespace=namespace,

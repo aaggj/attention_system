@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GB_ATTENTION_OPTIMIZEDATTENTIONSERVER_H
-#define GB_ATTENTION_OPTIMIZEDATTENTIONSERVER_H
+#ifndef ATTENTION_SYSTEM_OPTIMIZEDATTENTIONSERVER_H
+#define ATTENTION_SYSTEM_OPTIMIZEDATTENTIONSERVER_H
 
 #include <list>
 #include <string>
 
-#include "gb_attention/AttentionServerNode.hpp"
+#include "attention_system/AttentionServerNode.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace gb_attention
+namespace attention_system
 {
 
 class AttentionPointCompareOptimized
@@ -61,6 +61,6 @@ protected:
 	void update_points();
 };
 
-};  // namespace gb_attention
+};  // namespace attention_system
 
-#endif  // GB_ATTENTION_OPTIMIZEDATTENTIONSERVER_H
+#endif  // ATTENTION_SYSTEM_OPTIMIZEDATTENTIONSERVER_H

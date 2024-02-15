@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>gb_attention</name>
+  <name>attention_system</name>
   <version>0.0.1</version>
-  <description>Paquete de introducción de csuro (Curso Superior Universitario de Programación de Robots con ROS)</description>
+  <description>Paquete sistema de atención</description>
 
-  <maintainer email="fmrico@gmail.com">paco</maintainer>
+  <maintainer email="albertogarciagomezjacinto@gmail.com">Alberto</maintainer>
+  <maintainer email="fmrico@gmail.com">Francisco Martín Rico</maintainer>
   <license>GPLv3</license>
-  <url type="website">http://www.urjc.es/estudios/titulos-propios/1701-curso-superior-universitario-en-programacion-de-robots-con-ros</url>
+  <url type="website">https://intelligentroboticslab.gsyc.urjc.es/</url>
 
   <author email="fmrico@gmail.com">Francisco Martín Rico</author>
 
@@ -17,7 +18,7 @@
   <depend>lifecycle_msgs</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
-  <depend>gb_attention_msgs</depend>
+  <depend>attention_system_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GB_ATTENTION_ATTENTIONSERVER_H
-#define GB_ATTENTION_ATTENTIONSERVER_H
+#ifndef ATTENTION_SYSTEM_ATTENTIONSERVER_H
+#define ATTENTION_SYSTEM_ATTENTIONSERVER_H
 
 #include <list>
 #include <string>
@@ -21,7 +21,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2/transform_datatypes.h>
 
-#include "gb_attention_msgs/msg/attention_points.hpp"
+#include "attention_system_msgs/msg/attention_points.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
@@ -31,7 +31,7 @@
 #include "rclcpp_cascade_lifecycle/rclcpp_cascade_lifecycle.hpp"
 
 
-namespace gb_attention
+namespace attention_system
 {
 
 struct AttentionPoint
@@ -78,7 +78,7 @@ protected:
 	virtual void update_points();
   void update_time_in_fovea();
   void remove_expired_points();
-	void attention_point_callback(const gb_attention_msgs::msg::AttentionPoints::ConstSharedPtr msg);
+	void attention_point_callback(const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg);
 	void joint_state_callback(const sensor_msgs::msg::JointState::ConstSharedPtr msg);
 
 	void init_join_state();
@@ -90,7 +90,7 @@ protected:
   rclcpp_lifecycle::LifecyclePublisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr joint_cmd_pub_;
   rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::MarkerArray>::SharedPtr markers_pub_;
 
-	rclcpp::Subscription<gb_attention_msgs::msg::AttentionPoints>::SharedPtr attention_points_sub_;
+	rclcpp::Subscription<attention_system_msgs::msg::AttentionPoints>::SharedPtr attention_points_sub_;
 	rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
 
 	std::list<AttentionPoint> attention_points_;
@@ -108,6 +108,6 @@ protected:
   rclcpp::TimerBase::SharedPtr timer_;
 };
 
-};  // namespace gb_attention
+};  // namespace attention_system
 
-#endif  // GB_ATTENTION_ATTENTIONSERVER_H
+#endif  // ATTENTION_SYSTEM_ATTENTIONSERVER_H

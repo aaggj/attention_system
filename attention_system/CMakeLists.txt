@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(gb_attention)
+project(attention_system)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
@@ -10,7 +10,7 @@ find_package(rclcpp_cascade_lifecycle REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(gb_attention_msgs REQUIRED)
+find_package(attention_system_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -25,7 +25,7 @@ set(dependencies
   lifecycle_msgs
   std_msgs
   geometry_msgs
-  gb_attention_msgs
+  attention_system_msgs
   sensor_msgs
   tf2
   tf2_ros
@@ -40,10 +40,10 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME} SHARED
-  src/gb_attention/AttentionServerNode.cpp
-  src/gb_attention/OptimizedAttentionServerNode.cpp
-  src/gb_attention/RoundRobinAttentionServerNode.cpp
-  src/gb_attention/SimpleAttentionServerNode.cpp
+  src/attention_system/AttentionServerNode.cpp
+  src/attention_system/OptimizedAttentionServerNode.cpp
+  src/attention_system/RoundRobinAttentionServerNode.cpp
+  src/attention_system/SimpleAttentionServerNode.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
@@ -51,11 +51,11 @@ add_executable(attention_server src/attention_server.cpp)
 ament_target_dependencies(attention_server ${dependencies})
 target_link_libraries(attention_server ${PROJECT_NAME})
 
-add_library(gb_attention_scan_bt_node SHARED src/behavior_tree_nodes/Scan.cpp)
-list(APPEND plugin_libs gb_attention_scan_bt_node)
+add_library(attention_system_scan_bt_node SHARED src/behavior_tree_nodes/Scan.cpp)
+list(APPEND plugin_libs attention_system_scan_bt_node)
 
-add_library(gb_attention_track_bt_node SHARED src/behavior_tree_nodes/Track.cpp)
-list(APPEND plugin_libs gb_attention_track_bt_node)
+add_library(attention_system_track_bt_node SHARED src/behavior_tree_nodes/Track.cpp)
+list(APPEND plugin_libs attention_system_track_bt_node)
 
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})

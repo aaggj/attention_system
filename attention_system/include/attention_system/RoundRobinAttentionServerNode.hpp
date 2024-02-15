@@ -12,40 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GB_ATTENTION_SIMPLEATTENTIONSERVER_H
-#define GB_ATTENTION_SIMPLEATTENTIONSERVER_H
+#ifndef ATTENTION_SYSTEM_ROUNDROBINATTENTIONSERVER_H
+#define ATTENTION_SYSTEM_ROUNDROBINATTENTIONSERVER_H
 
 #include <list>
 #include <string>
 
-#include "gb_attention/AttentionServerNode.hpp"
+#include "attention_system/AttentionServerNode.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace gb_attention
+namespace attention_system
 {
 
-class SimpleAttentionServerNode: public AttentionServerNode
+class AttentionPointCompareRoundRobin
 {
 public:
-	SimpleAttentionServerNode();
+	AttentionPointCompareRoundRobin() {}
+
+	bool operator()(const AttentionPoint& a, const AttentionPoint& b)
+  {
+		return (a.epoch < b.epoch);
+	}
+};
+
+
+class RoundRobinAttentionServerNode: public AttentionServerNode
+{
+public:
+	RoundRobinAttentionServerNode();
 
 	void update();
 
 protected:
-	void update_limits();
-
-	float max_yaw_, min_yaw_;
-	float max_pitch_, min_pitch_;
-
-	float direction_yaw_, direction_pitch_;
-
-	rclcpp::Time ts_sent_;
-	rclcpp::Duration duration_;
-  bool vertical_;
-  bool change_;
+	void update_points();
 };
 
-};  // namespace gb_attention
+};  // namespace attention_system
 
-#endif  // GB_ATTENTION_SIMPLEATTENTIONSERVER_H
+#endif  // ATTENTION_SYSTEM_ROUNDROBINATTENTIONSERVER_H
