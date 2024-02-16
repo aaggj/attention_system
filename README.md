@@ -33,7 +33,7 @@ Before running the system, ensure to compile the workspace with ROS2. Navigate t
 
 ```bash
 cd ~/attention_system_ws
-colcon build
+colcon build --symlink-install 
 source install/setup.bash
 ```
 
