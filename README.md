@@ -6,7 +6,7 @@ Welcome to the Attention System repository. This system is designed to manage a 
 ## Prerequisites
 
 - **Git:** Required for cloning the repository. If not installed, download it from [https://git-scm.com/](https://git-scm.com/).
-- **ROS2:** Ensure ROS2 is installed on your system to run the attention system. For installation details, refer to the [ROS2 Installation Guide](https://index.ros.org/doc/ros2/Installation/).
+- **ROS2 humble:** Ensure ROS2 humble is installed on your system to run the attention system. For installation details, refer to the [ROS2 Installation Guide](https://docs.ros.org/en/humble/Installation.html).
 
 ## Installation
 
