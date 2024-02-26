@@ -50,6 +50,7 @@ OptimizedAttentionServerNode::update()
   remove_expired_points();
 
   if (attention_points_.empty()) {
+	RCLCPP_INFO(get_logger(), "###############No attention points#################");
     return;
   }
 
@@ -90,6 +91,7 @@ OptimizedAttentionServerNode::update()
 	if ((now() - ts_sent_).seconds() > 5.0 ||
 		(now() - time_in_pos_) > (rclcpp::Duration(1, 0) + attention_points_.begin()->time_in_point))
   {
+		RCLCPP_INFO(get_logger(), "**********************************");
 		if ((now() - ts_sent_).seconds() > 10) {
 			RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");
 			RCLCPP_INFO(get_logger(), "Current time: %f", (now() - ts_sent_).seconds());

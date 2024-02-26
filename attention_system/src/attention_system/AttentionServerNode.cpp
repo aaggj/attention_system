@@ -97,6 +97,7 @@ void
 AttentionServerNode::attention_point_callback(
   const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg)
 {
+	RCLCPP_INFO(get_logger(), "----------AttentionPoint received via callback-------------");
 	int point_counter = 0;
 	for (const auto & msg_point : msg->attention_points) {
 		std::string point_id = msg->instance_id + "." + std::to_string(point_counter++);
