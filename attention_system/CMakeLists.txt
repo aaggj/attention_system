@@ -7,6 +7,7 @@ set(CMAKE_BUILD_TYPE Debug)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_cascade_lifecycle REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -16,12 +17,14 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(behaviortree_cpp_v3 REQUIRED)
 
 set(dependencies
   rclcpp
   rclcpp_cascade_lifecycle
+  rclcpp_action
   lifecycle_msgs
   std_msgs
   geometry_msgs
@@ -31,6 +34,7 @@ set(dependencies
   tf2_ros
   tf2_geometry_msgs
   trajectory_msgs
+  control_msgs
   visualization_msgs
   behaviortree_cpp_v3
 )
@@ -44,6 +48,7 @@ add_library(${PROJECT_NAME} SHARED
   src/attention_system/OptimizedAttentionServerNode.cpp
   src/attention_system/RoundRobinAttentionServerNode.cpp
   src/attention_system/SimpleAttentionServerNode.cpp
+  src/attention_system/PIDController.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 

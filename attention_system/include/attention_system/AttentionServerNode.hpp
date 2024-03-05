@@ -26,9 +26,16 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 
+#include "control_msgs/msg/joint_trajectory_controller_state.hpp"
+#include "control_msgs/action/follow_joint_trajectory.hpp"
+
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_cascade_lifecycle/rclcpp_cascade_lifecycle.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+
+#include "attention_system/PIDController.hpp"
+#include "attention_system_msgs/msg/pan_tilt_command.hpp"
 
 
 namespace attention_system
@@ -78,8 +85,10 @@ protected:
 	virtual void update_points();
   void update_time_in_fovea();
   void remove_expired_points();
-	void attention_point_callback(const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg);
-	void joint_state_callback(const sensor_msgs::msg::JointState::ConstSharedPtr msg);
+  void attention_point_callback(
+    const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg);
+	void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
+  void command_callback(attention_system_msgs::msg::PanTiltCommand::UniquePtr msg);
 
 	void init_join_state();
 	void publish_markers();
@@ -87,17 +96,31 @@ protected:
 	std::shared_ptr<tf2::BufferCore> tfBuffer_;
 	std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
-  rclcpp_lifecycle::LifecyclePublisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr joint_cmd_pub_;
-  rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::MarkerArray>::SharedPtr markers_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<
+    trajectory_msgs::msg::JointTrajectory>::SharedPtr joint_cmd_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<
+    visualization_msgs::msg::MarkerArray>::SharedPtr markers_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<
+    attention_system_msgs::msg::PanTiltCommand>::SharedPtr comm_pub_;
+
+  std::shared_ptr<rclcpp_action::Client<
+    control_msgs::action::FollowJointTrajectory>> action_client_;
+  bool goal_result_available_{false};
+  rclcpp_action::ClientGoalHandle<
+    control_msgs::action::FollowJointTrajectory>::WrappedResult result_;
+  rclcpp_action::ClientGoalHandle<
+    control_msgs::action::FollowJointTrajectory>::SharedPtr goal_handle_;
 
 	rclcpp::Subscription<attention_system_msgs::msg::AttentionPoints>::SharedPtr attention_points_sub_;
-	rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
+	rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr joint_state_sub_;
+  rclcpp::Subscription<attention_system_msgs::msg::PanTiltCommand>::SharedPtr command_sub_;
 
 	std::list<AttentionPoint> attention_points_;
 
-	rclcpp::Time time_in_pos_;
+	rclcpp::Time time_in_pos_, last_command_ts_;
 
 	trajectory_msgs::msg::JointTrajectory joint_cmd_;
+  
 	sensor_msgs::msg::JointState joint_state_;
 
 	float current_yaw_;
@@ -106,6 +129,12 @@ protected:
 	float goal_pitch_;
 
   rclcpp::TimerBase::SharedPtr timer_;
+  attention_system_msgs::msg::PanTiltCommand::UniquePtr last_command_;
+  control_msgs::msg::JointTrajectoryControllerState::UniquePtr last_state_;
+  
+  PIDController pan_pid_, tilt_pid_;
+
+  rclcpp::Node::SharedPtr node_;
 };
 
 };  // namespace attention_system

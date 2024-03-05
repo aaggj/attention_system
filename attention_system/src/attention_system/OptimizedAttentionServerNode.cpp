@@ -16,12 +16,15 @@
 #include <list>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-
+#include "control_msgs/action/follow_joint_trajectory.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 
 #include "attention_system/OptimizedAttentionServerNode.hpp"
 
 #include "rclcpp/rclcpp.hpp"
+
+#include "rclcpp_action/rclcpp_action.hpp"
+
 
 
 namespace attention_system
@@ -47,6 +50,7 @@ OptimizedAttentionServerNode::update_points()
 void
 OptimizedAttentionServerNode::update()
 {
+//   if(last_state_ == nullptr) {return;}
   remove_expired_points();
 
   if (attention_points_.empty()) {
@@ -107,7 +111,8 @@ OptimizedAttentionServerNode::update()
 		double z = attention_points_.begin()->point[2];
 
 		RCLCPP_INFO(this->get_logger(), "Punto x: %f, y: %f, z: %f", x, y, z);
-		RCLCPP_INFO(get_logger(), "1st point id : %s", attention_points_.begin()->point.frame_id_.c_str());
+		RCLCPP_INFO(get_logger(), "1st point id : %s",
+      attention_points_.begin()->point.frame_id_.c_str());
 
 		update_points();
 		RCLCPP_INFO(get_logger(), "Points updated");
@@ -115,15 +120,75 @@ OptimizedAttentionServerNode::update()
 
 		RCLCPP_INFO(get_logger(), "Markers published");
 
-		goal_yaw_ = std::max(-MAX_YAW, std::min(MAX_YAW, attention_points_.begin()->yaw));
-		goal_pitch_ = std::max(-MAX_PITCH, std::min(MAX_PITCH, attention_points_.begin()->pitch));
+		double control_pan, control_tilt;
+		control_pan = pan_pid_.get_output(0.0);
+  		control_tilt = tilt_pid_.get_output(0.0);
 
-		joint_cmd_.points[0].positions[0] = goal_yaw_;
-		joint_cmd_.points[0].positions[1] = goal_pitch_;
+		goal_yaw_ = std::max(-MAX_YAW, std::min(MAX_YAW,
+      attention_points_.begin()->yaw));
+		goal_pitch_ = std::max(-MAX_PITCH, std::min(MAX_PITCH,
+      attention_points_.begin()->pitch));
+
+		auto goal_msg = control_msgs::action::FollowJointTrajectory::Goal();
+    
+    goal_msg.trajectory.joint_names.resize(2);
+		goal_msg.trajectory.joint_names.push_back("head_1_joint");
+		goal_msg.trajectory.joint_names.push_back("head_2_joint");
+		goal_msg.trajectory.points.resize(2);
+		goal_msg.trajectory.points[0].positions.resize(2);
+
+		goal_msg.trajectory.points[0].positions[0] = goal_yaw_;
+		goal_msg.trajectory.points[0].positions[1] = goal_pitch_;
+
+    goal_msg.trajectory.points[0].time_from_start = rclcpp::Duration(1s);
+
+		// joint_cmd_.points[0].positions[0] = goal_yaw_ - control_pan;
+		// joint_cmd_.points[0].positions[1] = goal_pitch_ - control_tilt;
 
 		// joint_cmd_.header.stamp = now() + rclcpp::Duration(1s) ;  // Disabled in sim
 		ts_sent_ = now();
-		joint_cmd_pub_->publish(joint_cmd_);
+    
+    if (!action_client_->wait_for_action_server(std::chrono::seconds(10))) {
+      RCLCPP_ERROR(this->get_logger(),
+        "Action server not available after waiting, exiting update");
+      return;
+  }
+
+  goal_result_available_ = false;
+  auto send_goal_options = rclcpp_action::Client<
+    control_msgs::action::FollowJointTrajectory>::SendGoalOptions();
+
+  send_goal_options.result_callback =
+      [this](const rclcpp_action::ClientGoalHandle<
+        control_msgs::action::FollowJointTrajectory>::WrappedResult & result) {
+        if (this->goal_handle_->get_goal_id() == result.goal_id) {
+          goal_result_available_ = true;
+          result_ = result;
+          RCLCPP_INFO(this->get_logger(), "Goal result received");
+        }
+      };
+
+
+  auto future_goal_handle = action_client_->async_send_goal(goal_msg,
+    send_goal_options);
+  
+  // RCLCPP_ERROR(this->get_logger(), "Sending goal");
+
+  if (rclcpp::spin_until_future_complete(node_, future_goal_handle) !=
+    rclcpp::FutureReturnCode::SUCCESS)
+  {
+    RCLCPP_ERROR(this->get_logger(),
+      "send goal call failed :(, exiting update");
+    return;
+  }
+
+  goal_handle_ = future_goal_handle.get();
+  if (!goal_handle_) {
+    RCLCPP_ERROR(this->get_logger(),
+      "Goal was rejected by server, exiting update");
+    return;
+  }
+		// joint_cmd_pub_->publish(joint_cmd_);
 		RCLCPP_INFO(get_logger(), "joint_cmd: %f, %f", joint_cmd_.points[0].positions[0], joint_cmd_.points[0].positions[1]);
 	}
 
