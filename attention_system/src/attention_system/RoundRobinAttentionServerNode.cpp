@@ -35,9 +35,9 @@ RoundRobinAttentionServerNode::RoundRobinAttentionServerNode()
 void
 RoundRobinAttentionServerNode::update_points()
 {
-	AttentionServerNode::update_points();
+  AttentionServerNode::update_points();
 
-	attention_points_.sort(AttentionPointCompareRoundRobin());
+  attention_points_.sort(AttentionPointCompareRoundRobin());
 }
 
 
@@ -52,29 +52,30 @@ RoundRobinAttentionServerNode::update()
 
   update_time_in_fovea();
 
-	if ((now() - time_in_pos_) > (attention_points_.begin()->time_in_point + rclcpp::Duration(1, 0)))
+  if ((now() - time_in_pos_) >
+    (attention_points_.begin()->time_in_point + rclcpp::Duration(1, 0)))
   {
-		attention_points_.begin()->epoch++;
+    attention_points_.begin()->epoch++;
 
-		update_points();
-		publish_markers();
+    update_points();
+    publish_markers();
 
-		goal_yaw_ = std::max(-MAX_YAW, std::min(MAX_YAW, attention_points_.begin()->yaw));
-		goal_pitch_ = std::max(-MAX_PITCH, std::min(MAX_PITCH, attention_points_.begin()->pitch));
+    goal_yaw_ = std::max(-MAX_YAW, std::min(MAX_YAW, attention_points_.begin()->yaw));
+    goal_pitch_ = std::max(-MAX_PITCH, std::min(MAX_PITCH, attention_points_.begin()->pitch));
 
-		joint_cmd_.points[0].positions[0] = goal_yaw_;
-		joint_cmd_.points[0].positions[1] = goal_pitch_;
+    joint_cmd_.points[0].positions[0] = goal_yaw_;
+    joint_cmd_.points[0].positions[1] = goal_pitch_;
 
-		// joint_cmd_.header.stamp = now() + rclcpp::Duration(1s);
-		joint_cmd_pub_->publish(joint_cmd_);
-	}
+    // joint_cmd_.header.stamp = now() + rclcpp::Duration(1s);
+    joint_cmd_pub_->publish(joint_cmd_);
+  }
 
-	if (fabs(current_yaw_ - goal_yaw_) > FOVEA_YAW ||
-			fabs(current_pitch_ - goal_pitch_) > FOVEA_PITCH)
+  if (fabs(current_yaw_ - goal_yaw_) > FOVEA_YAW ||
+    fabs(current_pitch_ - goal_pitch_) > FOVEA_PITCH)
   {
-		time_in_pos_ = now();
+    time_in_pos_ = now();
   }
 }
 
 
-};  // namespace attention_system
+}   // namespace attention_system

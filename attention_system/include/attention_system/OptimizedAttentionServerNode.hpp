@@ -28,39 +28,39 @@ namespace attention_system
 class AttentionPointCompareOptimized
 {
 public:
-	AttentionPointCompareOptimized(float ref_yaw, float ref_pitch)
+  AttentionPointCompareOptimized(float ref_yaw, float ref_pitch)
   : ref_yaw_(ref_yaw), ref_pitch_(ref_pitch) {}
 
-	bool operator()(const AttentionPoint & a, const AttentionPoint & b)
+  bool operator()(const AttentionPoint & a, const AttentionPoint & b)
   {
-		if (a.epoch < b.epoch) {
-			return true;
+    if (a.epoch < b.epoch) {
+      return true;
     } else if (b.epoch < a.epoch) {
-			return false;
+      return false;
     } else {
-			return ((fabs(a.yaw - ref_yaw_) + fabs(a.pitch - ref_pitch_)) <
-							(fabs(b.yaw - ref_yaw_) + fabs(b.pitch - ref_pitch_)));
+      return (fabs(a.yaw - ref_yaw_) + fabs(a.pitch - ref_pitch_)) <
+             (fabs(b.yaw - ref_yaw_) + fabs(b.pitch - ref_pitch_));
     }
-	}
+  }
 
-	float ref_yaw_;
-	float ref_pitch_;
+  float ref_yaw_;
+  float ref_pitch_;
 };
 
 
-class OptimizedAttentionServerNode: public AttentionServerNode
+class OptimizedAttentionServerNode : public AttentionServerNode
 {
 public:
-	OptimizedAttentionServerNode();
+  OptimizedAttentionServerNode();
 
-	void update();
+  void update();
 
 protected:
-	rclcpp::Time ts_sent_;
+  rclcpp::Time ts_sent_;
 
-	void update_points();
+  void update_points();
 };
 
-};  // namespace attention_system
+}   // namespace attention_system
 
 #endif  // ATTENTION_SYSTEM_OPTIMIZEDATTENTIONSERVER_H

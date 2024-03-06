@@ -25,27 +25,27 @@
 namespace attention_system
 {
 
-class SimpleAttentionServerNode: public AttentionServerNode
+class SimpleAttentionServerNode : public AttentionServerNode
 {
 public:
-	SimpleAttentionServerNode();
+  SimpleAttentionServerNode();
 
-	void update();
+  void update();
 
 protected:
-	void update_limits();
+  void update_limits();
 
-	float max_yaw_, min_yaw_;
-	float max_pitch_, min_pitch_;
+  float max_yaw_, min_yaw_;
+  float max_pitch_, min_pitch_;
 
-	float direction_yaw_, direction_pitch_;
+  float direction_yaw_, direction_pitch_;
 
-	rclcpp::Time ts_sent_;
-	rclcpp::Duration duration_;
+  rclcpp::Time ts_sent_;
+  rclcpp::Duration duration_;
   bool vertical_;
   bool change_;
 };
 
-};  // namespace attention_system
+}   // namespace attention_system
 
 #endif  // ATTENTION_SYSTEM_SIMPLEATTENTIONSERVER_H

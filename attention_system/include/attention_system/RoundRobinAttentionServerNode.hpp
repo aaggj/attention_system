@@ -28,26 +28,26 @@ namespace attention_system
 class AttentionPointCompareRoundRobin
 {
 public:
-	AttentionPointCompareRoundRobin() {}
+  AttentionPointCompareRoundRobin() {}
 
-	bool operator()(const AttentionPoint& a, const AttentionPoint& b)
+  bool operator()(const AttentionPoint & a, const AttentionPoint & b)
   {
-		return (a.epoch < b.epoch);
-	}
+    return a.epoch < b.epoch;
+  }
 };
 
 
-class RoundRobinAttentionServerNode: public AttentionServerNode
+class RoundRobinAttentionServerNode : public AttentionServerNode
 {
 public:
-	RoundRobinAttentionServerNode();
+  RoundRobinAttentionServerNode();
 
-	void update();
+  void update();
 
 protected:
-	void update_points();
+  void update_points();
 };
 
-};  // namespace attention_system
+}   // namespace attention_system
 
 #endif  // ATTENTION_SYSTEM_ROUNDROBINATTENTIONSERVER_H

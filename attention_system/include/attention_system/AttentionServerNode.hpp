@@ -43,15 +43,15 @@ namespace attention_system
 
 struct AttentionPoint
 {
-	std::string point_id;
-	tf2::Stamped<tf2::Vector3> point;
-	float yaw;
-	float pitch;
-	int epoch;
+  std::string point_id;
+  tf2::Stamped<tf2::Vector3> point;
+  float yaw;
+  float pitch;
+  int epoch;
   rclcpp::Time last_time_in_fovea;
   rclcpp::Time last_update_ts;
-  rclcpp::Duration lifeness {0,0};
-  rclcpp::Duration time_in_point {0,0};
+  rclcpp::Duration lifeness {0, 0};
+  rclcpp::Duration time_in_point {0, 0};
 };
 
 inline
@@ -60,10 +60,10 @@ void fromMsg(const geometry_msgs::msg::PointStamped & in, tf2::Stamped<tf2::Vect
 class AttentionServerNode : public rclcpp_cascade_lifecycle::CascadeLifecycleNode
 {
 public:
-	explicit AttentionServerNode(const std::string & name = "attention_server");
+  explicit AttentionServerNode(const std::string & name = "attention_server");
   void init();
 
-	virtual void update() = 0;
+  virtual void update() = 0;
   void print();
 
 protected:
@@ -82,19 +82,19 @@ protected:
   static constexpr float MAX_YAW = M_PI / 2.0;
   static constexpr float MAX_PITCH = M_PI / 3.0;
 
-	virtual void update_points();
+  virtual void update_points();
   void update_time_in_fovea();
   void remove_expired_points();
   void attention_point_callback(
     const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg);
-	void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
+  void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
   void command_callback(attention_system_msgs::msg::PanTiltCommand::UniquePtr msg);
 
-	void init_join_state();
-	void publish_markers();
-  
-	std::shared_ptr<tf2::BufferCore> tfBuffer_;
-	std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+  void init_join_state();
+  void publish_markers();
+
+  std::shared_ptr<tf2::BufferCore> tfBuffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   rclcpp_lifecycle::LifecyclePublisher<
     trajectory_msgs::msg::JointTrajectory>::SharedPtr joint_cmd_pub_;
@@ -104,39 +104,40 @@ protected:
     attention_system_msgs::msg::PanTiltCommand>::SharedPtr comm_pub_;
 
   std::shared_ptr<rclcpp_action::Client<
-    control_msgs::action::FollowJointTrajectory>> action_client_;
+      control_msgs::action::FollowJointTrajectory>> action_client_;
   bool goal_result_available_{false};
   rclcpp_action::ClientGoalHandle<
     control_msgs::action::FollowJointTrajectory>::WrappedResult result_;
   rclcpp_action::ClientGoalHandle<
     control_msgs::action::FollowJointTrajectory>::SharedPtr goal_handle_;
 
-	rclcpp::Subscription<attention_system_msgs::msg::AttentionPoints>::SharedPtr attention_points_sub_;
-	rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr joint_state_sub_;
+  rclcpp::Subscription<attention_system_msgs::msg::AttentionPoints>::SharedPtr attention_points_sub_;
+  rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr
+    joint_state_sub_;
   rclcpp::Subscription<attention_system_msgs::msg::PanTiltCommand>::SharedPtr command_sub_;
 
-	std::list<AttentionPoint> attention_points_;
+  std::list<AttentionPoint> attention_points_;
 
-	rclcpp::Time time_in_pos_, last_command_ts_;
+  rclcpp::Time time_in_pos_, last_command_ts_;
 
-	trajectory_msgs::msg::JointTrajectory joint_cmd_;
-  
-	sensor_msgs::msg::JointState joint_state_;
+  trajectory_msgs::msg::JointTrajectory joint_cmd_;
 
-	float current_yaw_;
-	float current_pitch_;
-	float goal_yaw_;
-	float goal_pitch_;
+  sensor_msgs::msg::JointState joint_state_;
+
+  float current_yaw_;
+  float current_pitch_;
+  float goal_yaw_;
+  float goal_pitch_;
 
   rclcpp::TimerBase::SharedPtr timer_;
   attention_system_msgs::msg::PanTiltCommand::UniquePtr last_command_;
   control_msgs::msg::JointTrajectoryControllerState::UniquePtr last_state_;
-  
+
   PIDController pan_pid_, tilt_pid_;
 
   rclcpp::Node::SharedPtr node_;
 };
 
-};  // namespace attention_system
+}   // namespace attention_system
 
 #endif  // ATTENTION_SYSTEM_ATTENTIONSERVER_H
