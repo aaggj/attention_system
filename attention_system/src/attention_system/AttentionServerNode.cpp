@@ -91,9 +91,12 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
   pan_pid_.set_pid(0.4, 0.05, 0.55);
   tilt_pid_.set_pid(0.4, 0.05, 0.55);
 
+  server_timeout_ = 1s;
+
   init_join_state();
   RCLCPP_INFO(get_logger(), "AttentionServerNode configured");
-  node_ = rclcpp::Node::make_shared("action_client");
+  // node_ = rclcpp::Node::make_shared("action_client");
+  node_ = get_node_base_interface();
   return CascadeLifecycleNode::on_configure(state);
 }
 

@@ -183,13 +183,22 @@ OptimizedAttentionServerNode::update()
 
     // RCLCPP_ERROR(this->get_logger(), "Sending goal");
 
-    if (rclcpp::spin_until_future_complete(node_, future_goal_handle) !=
+    // auto future_request = service_client_->async_send_request(goal_msg).share();
+    
+    auto ret = callback_group_executor_.spin_until_future_complete(
+      future_goal_handle, std::chrono::milliseconds(5000));
+    callback_group_ = this->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive);
+    callback_group_executor_.add_callback_group(
+      callback_group_, this->get_node_base_interface());
+
+    if (rclcpp::spin_until_future_complete(node_, future_goal_handle, server_timeout_) !=
       rclcpp::FutureReturnCode::SUCCESS)
     {
       RCLCPP_ERROR(
         this->get_logger(),
-        "send goal call failed :(, exiting update");
-      return;
+        "send goal failed :(, exiting update");
+      	return;
     }
 
     goal_handle_ = future_goal_handle.get();
@@ -199,10 +208,10 @@ OptimizedAttentionServerNode::update()
         "Goal was rejected by server, exiting update");
       return;
     }
-    // joint_cmd_pub_->publish(joint_cmd_);
-    RCLCPP_INFO(
-      get_logger(), "joint_cmd: %f, %f", joint_cmd_.points[0].positions[0],
-      joint_cmd_.points[0].positions[1]);
+    // // joint_cmd_pub_->publish(joint_cmd_);
+    // RCLCPP_INFO(
+    //   get_logger(), "joint_cmd: %f, %f", joint_cmd_.points[0].positions[0],
+    //   joint_cmd_.points[0].positions[1]);
   }
 
   if (fabs(current_yaw_ - goal_yaw_) > FOVEA_YAW ||

@@ -32,6 +32,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_cascade_lifecycle/rclcpp_cascade_lifecycle.hpp"
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 
 #include "attention_system/PIDController.hpp"
@@ -135,7 +136,13 @@ protected:
 
   PIDController pan_pid_, tilt_pid_;
 
-  rclcpp::Node::SharedPtr node_;
+  // rclcpp_lifecycle::LifecycleNode node_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_;
+  // rclcpp::Node::SharedPtr node_;
+
+  std::chrono::milliseconds server_timeout_;
+  rclcpp::executors::SingleThreadedExecutor callback_group_executor_;
+  rclcpp::CallbackGroup::SharedPtr callback_group_;
 };
 
 }   // namespace attention_system
