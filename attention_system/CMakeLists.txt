@@ -58,7 +58,7 @@ install(DIRECTORY include/
   DESTINATION include/
 )
 
-install(DIRECTORY launch params DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   ${PROJECT_NAME}
