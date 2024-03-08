@@ -49,7 +49,6 @@ OptimizedAttentionServerNode::update_points()
 void
 OptimizedAttentionServerNode::update()
 {
-//   if(last_state_ == nullptr) {return;}
   remove_expired_points();
 
   if (attention_points_.empty()) {
@@ -94,9 +93,6 @@ OptimizedAttentionServerNode::update()
     point.pitch = atan2(point_head_1.z(), point_head_1.x());
   }
 
-  // if ((now() - ts_sent_).seconds() > 5.0 ||
-  //   (now() - time_in_pos_) > (rclcpp::Duration(1, 0) + attention_points_.begin()->time_in_point))
-  // {
     RCLCPP_INFO(get_logger(), "**********************************");
     if ((now() - ts_sent_).seconds() > 10) {
       RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");
@@ -119,7 +115,6 @@ OptimizedAttentionServerNode::update()
 
     update_points();
     RCLCPP_INFO(get_logger(), "Points updated");
-    // publish_markers();
 
     RCLCPP_INFO(get_logger(), "Markers published");
 
@@ -146,10 +141,6 @@ OptimizedAttentionServerNode::update()
 
     goal_msg.trajectory.points.push_back(point);
 
-    // joint_cmd_.points[0].positions[0] = goal_yaw_ - control_pan;
-    // joint_cmd_.points[0].positions[1] = goal_pitch_ - control_tilt;
-
-    // joint_cmd_.header.stamp = now() + rclcpp::Duration(1s) ;  // Disabled in sim
     ts_sent_ = now();
 
     goal_result_available_ = false;
@@ -171,11 +162,6 @@ OptimizedAttentionServerNode::update()
 
     if(!goal_sent_ || (dif_yaw < THRESOLD_YAW || dif_pitch < THRESOLD_PITCH))
     {
-      // if(dif_yaw < THRESOLD_YAW || dif_pitch < THRESOLD_PITCH)
-      // {
-      //   auto future_goal_handle = action_client_->async_cancel_all_goals();
-      //   RCLCPP_INFO(get_logger(), "Canceling all goals");
-      // }
 
       auto future_goal_handle = action_client_->async_send_goal(
         goal_msg);
@@ -187,30 +173,9 @@ OptimizedAttentionServerNode::update()
       callback_group_executor_.add_callback_group(
         callback_group_, this->get_node_base_interface());
 
-      // auto ret = callback_group_executor_.spin_until_future_complete(
-      // future_goal_handle);//1s
-
       callback_group_executor_.spin_some();
       RCLCPP_INFO(get_logger(), "Goal sent, waiting for result");
-      
 
-      // if (ret != rclcpp::FutureReturnCode::SUCCESS)
-      // {
-      //   RCLCPP_ERROR(
-      //     this->get_logger(),
-      //     "send goal failed :(, exiting update");
-      //   	return;
-      // }
-      // goal_handle_ = future_goal_handle.get();
-      // RCLCPP_INFO(get_logger(), "Future goal handle get");
-      // if (!goal_handle_)
-      // {
-      //   RCLCPP_ERROR(
-      //     this->get_logger(),
-      //     "Goal was rejected by server, exiting update");
-      //     return;
-      // }
-      // RCLCPP_INFO(get_logger(), "Goal sent");
     }
     else
     {

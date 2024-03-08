@@ -24,7 +24,6 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <control_msgs/msg/joint_trajectory_controller_state.hpp>
 #include "geometry_msgs/msg/point_stamped.hpp"
-// #include "attention_system_msgs/msg/pan_tilt_command.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 
 #include "attention_system/AttentionServerNode.hpp"
@@ -57,8 +56,6 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
 {
   joint_cmd_pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>(
     "/head_controller/joint_trajectory", 100);
-  // comm_pub_ = create_publisher<attention_system_msgs::msg::PanTiltCommand>(
-  //   "/command", 100);
 
   action_client_ = rclcpp_action::create_client
     <control_msgs::action::FollowJointTrajectory>(
@@ -76,14 +73,6 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
       &AttentionServerNode::attention_point_callback,
       this, _1));
 
-  // command_sub_ = create_subscription<attention_system_msgs::msg::PanTiltCommand>(
-  //   "command", 100, std::bind(&AttentionServerNode::command_callback, this, _1));
-
-  // joint_state_sub_ = create_subscription<
-  //   control_msgs::msg::JointTrajectoryControllerState>(
-  //     "joint_state", rclcpp::SensorDataQoS(),
-  //       std::bind(&AttentionServerNode::joint_state_callback, this, _1));
-
   markers_pub_ = create_publisher<visualization_msgs::msg::MarkerArray>(
     "/attention_markers", 100);
 
@@ -94,14 +83,11 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
     std::make_shared<tf2_ros::TransformListener>(*tfBuffer_, 
       shared_from_this(), false);
 
-  // server_timeout_ = 1s;
   last_pitch_ = 0.0;
   last_yaw_ = 0.0;
 
   init_join_state();
   RCLCPP_INFO(get_logger(), "AttentionServerNode configured");
-  // node_ = rclcpp::Node::make_shared("action_client");
-  // node_ = get_node_base_interface();
   return CascadeLifecycleNode::on_configure(state);
 }
 
@@ -112,7 +98,6 @@ AttentionServerNode::on_activate(const rclcpp_lifecycle::State & state)
 
   joint_cmd_pub_->on_activate();
   markers_pub_->on_activate();
-  // comm_pub_->on_activate();
 
   RCLCPP_INFO(get_logger(), "AttentionServerNode activated");
   return CascadeLifecycleNode::on_activate(state);
@@ -123,7 +108,6 @@ AttentionServerNode::on_deactivate(const rclcpp_lifecycle::State & state)
 {
   trajectory_msgs::msg::JointTrajectory command_msg;
   command_msg.header.stamp = now();
-  // command_msg.joint_names = last_state_->joint_names;
   command_msg.points.resize(1);
   command_msg.points[0].positions.resize(2);
   command_msg.points[0].velocities.resize(2);

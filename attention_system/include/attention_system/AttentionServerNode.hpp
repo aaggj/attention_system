@@ -90,9 +90,6 @@ protected:
   void remove_expired_points();
   void attention_point_callback(
     const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg);
-  // void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
-  // void command_callback(attention_system_msgs::msg::PanTiltCommand::UniquePtr msg);
-
   void init_join_state();
   void publish_markers();
 
@@ -103,8 +100,6 @@ protected:
     trajectory_msgs::msg::JointTrajectory>::SharedPtr joint_cmd_pub_;
   rclcpp_lifecycle::LifecyclePublisher<
     visualization_msgs::msg::MarkerArray>::SharedPtr markers_pub_;
-  // rclcpp_lifecycle::LifecyclePublisher<
-  //   attention_system_msgs::msg::PanTiltCommand>::SharedPtr comm_pub_;
 
   std::shared_ptr<rclcpp_action::Client<
       control_msgs::action::FollowJointTrajectory>> action_client_;
@@ -116,9 +111,6 @@ protected:
     control_msgs::action::FollowJointTrajectory>::SharedPtr goal_handle_;
 
   rclcpp::Subscription<attention_system_msgs::msg::AttentionPoints>::SharedPtr attention_points_sub_;
-  // rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr
-  //   joint_state_sub_;
-  // rclcpp::Subscription<attention_system_msgs::msg::PanTiltCommand>::SharedPtr command_sub_;
 
   std::list<AttentionPoint> attention_points_;
 
@@ -134,13 +126,9 @@ protected:
 
 
   rclcpp::TimerBase::SharedPtr timer_;
-  // attention_system_msgs::msg::PanTiltCommand::UniquePtr last_command_;
-  // control_msgs::msg::JointTrajectoryControllerState::UniquePtr last_state_;
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_;
 
-
-  std::chrono::milliseconds server_timeout_;
   rclcpp::executors::SingleThreadedExecutor callback_group_executor_;
   rclcpp::CallbackGroup::SharedPtr callback_group_;
 };
