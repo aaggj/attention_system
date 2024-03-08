@@ -94,9 +94,9 @@ OptimizedAttentionServerNode::update()
     point.pitch = atan2(point_head_1.z(), point_head_1.x());
   }
 
-  if ((now() - ts_sent_).seconds() > 5.0 ||
-    (now() - time_in_pos_) > (rclcpp::Duration(1, 0) + attention_points_.begin()->time_in_point))
-  {
+  // if ((now() - ts_sent_).seconds() > 5.0 ||
+  //   (now() - time_in_pos_) > (rclcpp::Duration(1, 0) + attention_points_.begin()->time_in_point))
+  // {
     RCLCPP_INFO(get_logger(), "**********************************");
     if ((now() - ts_sent_).seconds() > 10) {
       RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");
@@ -119,13 +119,9 @@ OptimizedAttentionServerNode::update()
 
     update_points();
     RCLCPP_INFO(get_logger(), "Points updated");
-    publish_markers();
+    // publish_markers();
 
     RCLCPP_INFO(get_logger(), "Markers published");
-
-    double control_pan, control_tilt;
-    control_pan = pan_pid_.get_output(0.0);
-    control_tilt = tilt_pid_.get_output(0.0);
 
     goal_yaw_ = std::max(
       -MAX_YAW, std::min(
@@ -138,29 +134,23 @@ OptimizedAttentionServerNode::update()
 
     auto goal_msg = control_msgs::action::FollowJointTrajectory::Goal();
 
-    goal_msg.trajectory.joint_names.resize(2);
-    goal_msg.trajectory.joint_names.push_back("head_1_joint");
-    goal_msg.trajectory.joint_names.push_back("head_2_joint");
-    goal_msg.trajectory.points.resize(2);
-    goal_msg.trajectory.points[0].positions.resize(2);
+    goal_msg.trajectory.joint_names = std::vector<std::string>{"head_1_joint", "head_2_joint"};
 
-    goal_msg.trajectory.points[0].positions[0] = goal_yaw_;
-    goal_msg.trajectory.points[0].positions[1] = goal_pitch_;
+    trajectory_msgs::msg::JointTrajectoryPoint point;
 
-    goal_msg.trajectory.points[0].time_from_start = rclcpp::Duration(1s);
+    std::cout << "goal_yaw_: " << goal_yaw_ << std::endl;
+    std::cout << "goal_pitch_: " << goal_pitch_ << std::endl;
+    goal_yaw_ = std::clamp(goal_yaw_, -MAX_YAW, MAX_YAW);
+    point.positions = std::vector<double>{goal_yaw_, goal_pitch_};
+    point.time_from_start = rclcpp::Duration::from_seconds(1.0);
+
+    goal_msg.trajectory.points.push_back(point);
 
     // joint_cmd_.points[0].positions[0] = goal_yaw_ - control_pan;
     // joint_cmd_.points[0].positions[1] = goal_pitch_ - control_tilt;
 
     // joint_cmd_.header.stamp = now() + rclcpp::Duration(1s) ;  // Disabled in sim
     ts_sent_ = now();
-
-    if (!action_client_->wait_for_action_server(std::chrono::seconds(10))) {
-      RCLCPP_ERROR(
-        this->get_logger(),
-        "Action server not available after waiting, exiting update");
-      return;
-    }
 
     goal_result_available_ = false;
     auto send_goal_options = rclcpp_action::Client<
@@ -176,49 +166,70 @@ OptimizedAttentionServerNode::update()
         }
       };
 
+    auto dif_yaw = fabs(goal_yaw_ - last_yaw_);
+    auto dif_pitch = fabs(goal_pitch_ - last_pitch_);
 
-    auto future_goal_handle = action_client_->async_send_goal(
-      goal_msg,
-      send_goal_options);
-
-    // RCLCPP_ERROR(this->get_logger(), "Sending goal");
-
-    // auto future_request = service_client_->async_send_request(goal_msg).share();
-    
-    auto ret = callback_group_executor_.spin_until_future_complete(
-      future_goal_handle, std::chrono::milliseconds(5000));
-    callback_group_ = this->create_callback_group(
-      rclcpp::CallbackGroupType::MutuallyExclusive);
-    callback_group_executor_.add_callback_group(
-      callback_group_, this->get_node_base_interface());
-
-    if (rclcpp::spin_until_future_complete(node_, future_goal_handle, server_timeout_) !=
-      rclcpp::FutureReturnCode::SUCCESS)
+    if(!goal_sent_ || (dif_yaw < THRESOLD_YAW || dif_pitch < THRESOLD_PITCH))
     {
-      RCLCPP_ERROR(
-        this->get_logger(),
-        "send goal failed :(, exiting update");
-      	return;
-    }
+      // if(dif_yaw < THRESOLD_YAW || dif_pitch < THRESOLD_PITCH)
+      // {
+      //   auto future_goal_handle = action_client_->async_cancel_all_goals();
+      //   RCLCPP_INFO(get_logger(), "Canceling all goals");
+      // }
 
-    goal_handle_ = future_goal_handle.get();
-    if (!goal_handle_) {
-      RCLCPP_ERROR(
-        this->get_logger(),
-        "Goal was rejected by server, exiting update");
-      return;
+      auto future_goal_handle = action_client_->async_send_goal(
+        goal_msg);
+      goal_sent_ = true;
+      RCLCPP_INFO(get_logger(), "Sending goal");
+
+      callback_group_ = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
+      callback_group_executor_.add_callback_group(
+        callback_group_, this->get_node_base_interface());
+
+      // auto ret = callback_group_executor_.spin_until_future_complete(
+      // future_goal_handle);//1s
+
+      callback_group_executor_.spin_some();
+      RCLCPP_INFO(get_logger(), "Goal sent, waiting for result");
+      
+
+      // if (ret != rclcpp::FutureReturnCode::SUCCESS)
+      // {
+      //   RCLCPP_ERROR(
+      //     this->get_logger(),
+      //     "send goal failed :(, exiting update");
+      //   	return;
+      // }
+      // goal_handle_ = future_goal_handle.get();
+      // RCLCPP_INFO(get_logger(), "Future goal handle get");
+      // if (!goal_handle_)
+      // {
+      //   RCLCPP_ERROR(
+      //     this->get_logger(),
+      //     "Goal was rejected by server, exiting update");
+      //     return;
+      // }
+      // RCLCPP_INFO(get_logger(), "Goal sent");
     }
-    // // joint_cmd_pub_->publish(joint_cmd_);
-    // RCLCPP_INFO(
-    //   get_logger(), "joint_cmd: %f, %f", joint_cmd_.points[0].positions[0],
-    //   joint_cmd_.points[0].positions[1]);
-  }
+    else
+    {
+      RCLCPP_INFO(get_logger(),
+        "Goal not sent thresold exceeded or goal already sent");
+      RCLCPP_INFO(get_logger(),
+        "dif_yaw: %f, dif_pitch: %f, goal_sent: %d", dif_yaw, dif_pitch,
+          goal_sent_);
+    }
+  // } 
 
   if (fabs(current_yaw_ - goal_yaw_) > FOVEA_YAW ||
     fabs(current_pitch_ - goal_pitch_) > FOVEA_PITCH)
   {
     time_in_pos_ = now();
   }
+  last_pitch_ = goal_pitch_;
+  last_yaw_ = goal_yaw_;
+  
   RCLCPP_INFO(get_logger(), "OptimizedAttentionServerNode::update() end");
 }
 

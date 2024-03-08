@@ -112,10 +112,6 @@ SimpleAttentionServerNode::update()
   bool init = true;
   double control_pan, control_tilt;
   if (init) {
-    control_pan = pan_pid_.get_output(0.0);
-    RCLCPP_INFO(get_logger(), "pan_pid_.get_output");
-    control_tilt = tilt_pid_.get_output(0.0);
-    RCLCPP_INFO(get_logger(), "tilt_pid_.get_output");
     init = false;
   }
 

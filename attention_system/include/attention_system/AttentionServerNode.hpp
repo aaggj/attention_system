@@ -36,7 +36,7 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 
 #include "attention_system/PIDController.hpp"
-#include "attention_system_msgs/msg/pan_tilt_command.hpp"
+// #include "attention_system_msgs/msg/pan_tilt_command.hpp"
 
 
 namespace attention_system
@@ -80,16 +80,18 @@ protected:
   static constexpr double FOVEA_YAW = H_FOV / 2.0;
   static constexpr double FOVEA_PITCH = V_FOV / 2.0;
   static constexpr double NECK_SPEED = 0.1;
-  static constexpr float MAX_YAW = M_PI / 2.0;
-  static constexpr float MAX_PITCH = M_PI / 3.0;
+  static constexpr float MAX_YAW = 1.3;
+  static constexpr float MAX_PITCH = 0.185;
+  static constexpr float THRESOLD_PITCH = 0.5;
+  static constexpr float THRESOLD_YAW = 0.5;
 
   virtual void update_points();
   void update_time_in_fovea();
   void remove_expired_points();
   void attention_point_callback(
     const attention_system_msgs::msg::AttentionPoints::ConstSharedPtr msg);
-  void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
-  void command_callback(attention_system_msgs::msg::PanTiltCommand::UniquePtr msg);
+  // void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
+  // void command_callback(attention_system_msgs::msg::PanTiltCommand::UniquePtr msg);
 
   void init_join_state();
   void publish_markers();
@@ -101,21 +103,22 @@ protected:
     trajectory_msgs::msg::JointTrajectory>::SharedPtr joint_cmd_pub_;
   rclcpp_lifecycle::LifecyclePublisher<
     visualization_msgs::msg::MarkerArray>::SharedPtr markers_pub_;
-  rclcpp_lifecycle::LifecyclePublisher<
-    attention_system_msgs::msg::PanTiltCommand>::SharedPtr comm_pub_;
+  // rclcpp_lifecycle::LifecyclePublisher<
+  //   attention_system_msgs::msg::PanTiltCommand>::SharedPtr comm_pub_;
 
   std::shared_ptr<rclcpp_action::Client<
       control_msgs::action::FollowJointTrajectory>> action_client_;
   bool goal_result_available_{false};
+  bool goal_sent_{false};
   rclcpp_action::ClientGoalHandle<
     control_msgs::action::FollowJointTrajectory>::WrappedResult result_;
   rclcpp_action::ClientGoalHandle<
     control_msgs::action::FollowJointTrajectory>::SharedPtr goal_handle_;
 
   rclcpp::Subscription<attention_system_msgs::msg::AttentionPoints>::SharedPtr attention_points_sub_;
-  rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr
-    joint_state_sub_;
-  rclcpp::Subscription<attention_system_msgs::msg::PanTiltCommand>::SharedPtr command_sub_;
+  // rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr
+  //   joint_state_sub_;
+  // rclcpp::Subscription<attention_system_msgs::msg::PanTiltCommand>::SharedPtr command_sub_;
 
   std::list<AttentionPoint> attention_points_;
 
@@ -125,20 +128,17 @@ protected:
 
   sensor_msgs::msg::JointState joint_state_;
 
-  float current_yaw_;
-  float current_pitch_;
-  float goal_yaw_;
-  float goal_pitch_;
+  float current_yaw_, current_pitch_, goal_yaw_, goal_pitch_, last_yaw_,
+    last_pitch_;
+
+
 
   rclcpp::TimerBase::SharedPtr timer_;
-  attention_system_msgs::msg::PanTiltCommand::UniquePtr last_command_;
-  control_msgs::msg::JointTrajectoryControllerState::UniquePtr last_state_;
+  // attention_system_msgs::msg::PanTiltCommand::UniquePtr last_command_;
+  // control_msgs::msg::JointTrajectoryControllerState::UniquePtr last_state_;
 
-  PIDController pan_pid_, tilt_pid_;
-
-  // rclcpp_lifecycle::LifecycleNode node_;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_;
-  // rclcpp::Node::SharedPtr node_;
+
 
   std::chrono::milliseconds server_timeout_;
   rclcpp::executors::SingleThreadedExecutor callback_group_executor_;

@@ -30,15 +30,14 @@ int main(int argc, char ** argv)
   auto attention_server_node = std::make_shared<attention_system::OptimizedAttentionServerNode>();
   RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode created");
 
-  // attention_server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
-  // RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode configured");
-  // rclcpp::spin_some(attention_server_node->get_node_base_interface());
-  // RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode spinning");
-  // attention_server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+  attention_server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode configured");
+  rclcpp::spin_some(attention_server_node->get_node_base_interface());
+  RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode spinning");
+  attention_server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
 
-  // RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode activated");
+  RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode activated");
 
   rclcpp::spin(attention_server_node->get_node_base_interface());
-  // RCLCPP_INFO(attention_server_node->get_logger(), "OptimizedAttentionServerNode spinned");
   return 0;
 }
