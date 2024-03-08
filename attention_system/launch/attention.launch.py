@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -23,14 +22,9 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    bringup_dir = get_package_share_directory('attention_system')
-    config_dir = os.path.join(bringup_dir, 'params')
-    config_file = os.path.join(config_dir, 'attention_config.yaml')
+    get_package_share_directory('attention_system')
 
     namespace = LaunchConfiguration('namespace')
-
-    stdout_linebuf_envvar = SetEnvironmentVariable(
-        'RCUTILS_LOGGING_USE_STDOUT', '1')
 
     declare_namespace_cmd = DeclareLaunchArgument(
         'namespace',
@@ -41,14 +35,10 @@ def generate_launch_description():
         package='attention_system',
         executable='attention_server',
         output='screen',
-        namespace=namespace,
-        parameters=[
-          config_file
-        ])
+        namespace=namespace)
 
     ld = LaunchDescription()
 
-    ld.add_action(stdout_linebuf_envvar)
     ld.add_action(declare_namespace_cmd)
 
     ld.add_action(attention_manager_cmd)

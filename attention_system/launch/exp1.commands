@@ -1,4 +1,0 @@
-add node r2d2 robot
-add node table1 table
-add edge r2d2 table1 tf_static 1:0:0:0:0:0
-add edge r2d2 table1 symbolic want_see
