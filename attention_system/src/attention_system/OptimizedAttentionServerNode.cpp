@@ -92,99 +92,98 @@ OptimizedAttentionServerNode::update()
     point.pitch = atan2(point_head_1.z(), point_head_1.x());
   }
 
-    RCLCPP_INFO(get_logger(), "**********************************");
-    if ((now() - ts_sent_).seconds() > 10) {
-      RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");
-      RCLCPP_INFO(get_logger(), "Current time: %f", (now() - ts_sent_).seconds());
-      RCLCPP_INFO(get_logger(), "Now time: %f", now().seconds());
-      RCLCPP_INFO(get_logger(), "ts_sent_ time: %f", ts_sent_.seconds());
+  RCLCPP_INFO(get_logger(), "**********************************");
+  if ((now() - ts_sent_).seconds() > 10) {
+    RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");
+    RCLCPP_INFO(get_logger(), "Current time: %f", (now() - ts_sent_).seconds());
+    RCLCPP_INFO(get_logger(), "Now time: %f", now().seconds());
+    RCLCPP_INFO(get_logger(), "ts_sent_ time: %f", ts_sent_.seconds());
 
-    }
+  }
 
-    attention_points_.begin()->epoch++;
+  attention_points_.begin()->epoch++;
 
-    double x = attention_points_.begin()->point[0];
-    double y = attention_points_.begin()->point[1];
-    double z = attention_points_.begin()->point[2];
+  double x = attention_points_.begin()->point[0];
+  double y = attention_points_.begin()->point[1];
+  double z = attention_points_.begin()->point[2];
 
-    RCLCPP_INFO(this->get_logger(), "Punto x: %f, y: %f, z: %f", x, y, z);
+  RCLCPP_INFO(this->get_logger(), "Punto x: %f, y: %f, z: %f", x, y, z);
+  RCLCPP_INFO(
+    get_logger(), "1st point id : %s",
+    attention_points_.begin()->point.frame_id_.c_str());
+
+  update_points();
+  RCLCPP_INFO(get_logger(), "Points updated");
+
+  RCLCPP_INFO(get_logger(), "Markers published");
+
+  goal_yaw_ = std::max(
+    -MAX_YAW, std::min(
+      MAX_YAW,
+      attention_points_.begin()->yaw));
+  goal_pitch_ = std::max(
+    -MAX_PITCH, std::min(
+      MAX_PITCH,
+      attention_points_.begin()->pitch));
+
+  auto goal_msg = control_msgs::action::FollowJointTrajectory::Goal();
+
+  goal_msg.trajectory.joint_names = std::vector<std::string>{"head_1_joint", "head_2_joint"};
+
+  trajectory_msgs::msg::JointTrajectoryPoint point;
+
+  std::cout << "goal_yaw_: " << goal_yaw_ << std::endl;
+  std::cout << "goal_pitch_: " << goal_pitch_ << std::endl;
+  goal_yaw_ = std::clamp(goal_yaw_, -MAX_YAW, MAX_YAW);
+  point.positions = std::vector<double>{goal_yaw_, goal_pitch_};
+  point.time_from_start = rclcpp::Duration::from_seconds(1.0);
+
+  goal_msg.trajectory.points.push_back(point);
+
+  ts_sent_ = now();
+
+  goal_result_available_ = false;
+  auto send_goal_options = rclcpp_action::Client<
+    control_msgs::action::FollowJointTrajectory>::SendGoalOptions();
+
+  send_goal_options.result_callback =
+    [this](const rclcpp_action::ClientGoalHandle<
+        control_msgs::action::FollowJointTrajectory>::WrappedResult & result) {
+      if (this->goal_handle_->get_goal_id() == result.goal_id) {
+        goal_result_available_ = true;
+        result_ = result;
+        RCLCPP_INFO(this->get_logger(), "Goal result received");
+      }
+    };
+
+  auto dif_yaw = fabs(goal_yaw_ - last_yaw_);
+  auto dif_pitch = fabs(goal_pitch_ - last_pitch_);
+
+  if (!goal_sent_ || (dif_yaw < THRESOLD_YAW || dif_pitch < THRESOLD_PITCH)) {
+
+    auto future_goal_handle = action_client_->async_send_goal(
+      goal_msg);
+    goal_sent_ = true;
+    RCLCPP_INFO(get_logger(), "Sending goal");
+
+    callback_group_ = this->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive);
+    callback_group_executor_.add_callback_group(
+      callback_group_, this->get_node_base_interface());
+
+    callback_group_executor_.spin_some();
+    RCLCPP_INFO(get_logger(), "Goal sent, waiting for result");
+
+  } else {
     RCLCPP_INFO(
-      get_logger(), "1st point id : %s",
-      attention_points_.begin()->point.frame_id_.c_str());
-
-    update_points();
-    RCLCPP_INFO(get_logger(), "Points updated");
-
-    RCLCPP_INFO(get_logger(), "Markers published");
-
-    goal_yaw_ = std::max(
-      -MAX_YAW, std::min(
-        MAX_YAW,
-        attention_points_.begin()->yaw));
-    goal_pitch_ = std::max(
-      -MAX_PITCH, std::min(
-        MAX_PITCH,
-        attention_points_.begin()->pitch));
-
-    auto goal_msg = control_msgs::action::FollowJointTrajectory::Goal();
-
-    goal_msg.trajectory.joint_names = std::vector<std::string>{"head_1_joint", "head_2_joint"};
-
-    trajectory_msgs::msg::JointTrajectoryPoint point;
-
-    std::cout << "goal_yaw_: " << goal_yaw_ << std::endl;
-    std::cout << "goal_pitch_: " << goal_pitch_ << std::endl;
-    goal_yaw_ = std::clamp(goal_yaw_, -MAX_YAW, MAX_YAW);
-    point.positions = std::vector<double>{goal_yaw_, goal_pitch_};
-    point.time_from_start = rclcpp::Duration::from_seconds(1.0);
-
-    goal_msg.trajectory.points.push_back(point);
-
-    ts_sent_ = now();
-
-    goal_result_available_ = false;
-    auto send_goal_options = rclcpp_action::Client<
-      control_msgs::action::FollowJointTrajectory>::SendGoalOptions();
-
-    send_goal_options.result_callback =
-      [this](const rclcpp_action::ClientGoalHandle<
-          control_msgs::action::FollowJointTrajectory>::WrappedResult & result) {
-        if (this->goal_handle_->get_goal_id() == result.goal_id) {
-          goal_result_available_ = true;
-          result_ = result;
-          RCLCPP_INFO(this->get_logger(), "Goal result received");
-        }
-      };
-
-    auto dif_yaw = fabs(goal_yaw_ - last_yaw_);
-    auto dif_pitch = fabs(goal_pitch_ - last_pitch_);
-
-    if(!goal_sent_ || (dif_yaw < THRESOLD_YAW || dif_pitch < THRESOLD_PITCH))
-    {
-
-      auto future_goal_handle = action_client_->async_send_goal(
-        goal_msg);
-      goal_sent_ = true;
-      RCLCPP_INFO(get_logger(), "Sending goal");
-
-      callback_group_ = this->create_callback_group(
-        rclcpp::CallbackGroupType::MutuallyExclusive);
-      callback_group_executor_.add_callback_group(
-        callback_group_, this->get_node_base_interface());
-
-      callback_group_executor_.spin_some();
-      RCLCPP_INFO(get_logger(), "Goal sent, waiting for result");
-
-    }
-    else
-    {
-      RCLCPP_INFO(get_logger(),
-        "Goal not sent thresold exceeded or goal already sent");
-      RCLCPP_INFO(get_logger(),
-        "dif_yaw: %f, dif_pitch: %f, goal_sent: %d", dif_yaw, dif_pitch,
-          goal_sent_);
-    }
-  // } 
+      get_logger(),
+      "Goal not sent thresold exceeded or goal already sent");
+    RCLCPP_INFO(
+      get_logger(),
+      "dif_yaw: %f, dif_pitch: %f, goal_sent: %d", dif_yaw, dif_pitch,
+      goal_sent_);
+  }
+  // }
 
   if (fabs(current_yaw_ - goal_yaw_) > FOVEA_YAW ||
     fabs(current_pitch_ - goal_pitch_) > FOVEA_PITCH)
@@ -193,7 +192,7 @@ OptimizedAttentionServerNode::update()
   }
   last_pitch_ = goal_pitch_;
   last_yaw_ = goal_yaw_;
-  
+
   RCLCPP_INFO(get_logger(), "OptimizedAttentionServerNode::update() end");
 }
 

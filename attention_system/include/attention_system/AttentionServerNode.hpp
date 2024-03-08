@@ -117,7 +117,6 @@ protected:
     last_pitch_;
 
 
-
   rclcpp::TimerBase::SharedPtr timer_;
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_;

@@ -61,11 +61,11 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
     this,
     "/head_controller/follow_joint_trajectory");
 
- if (!action_client_->wait_for_action_server(std::chrono::seconds(10))) {
-      RCLCPP_ERROR(
-        this->get_logger(),
-        "Action server not available after waiting 10s");
-    }    
+  if (!action_client_->wait_for_action_server(std::chrono::seconds(10))) {
+    RCLCPP_ERROR(
+      this->get_logger(),
+      "Action server not available after waiting 10s");
+  }
 
   attention_points_sub_ = create_subscription<attention_system_msgs::msg::AttentionPoints>(
     "attention/attention_points", 100, std::bind(
@@ -76,8 +76,9 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
 
   tfBuffer_ = std::make_shared<tf2::BufferCore>();
   tf_listener_ =
-    std::make_shared<tf2_ros::TransformListener>(*tfBuffer_, 
-      shared_from_this(), false);
+    std::make_shared<tf2_ros::TransformListener>(
+    *tfBuffer_,
+    shared_from_this(), false);
 
   last_pitch_ = 0.0;
   last_yaw_ = 0.0;
