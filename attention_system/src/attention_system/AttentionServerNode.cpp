@@ -24,7 +24,6 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <control_msgs/msg/joint_trajectory_controller_state.hpp>
 #include "geometry_msgs/msg/point_stamped.hpp"
-#include "visualization_msgs/msg/marker_array.hpp"
 
 #include "attention_system/AttentionServerNode.hpp"
 
@@ -73,9 +72,6 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
       &AttentionServerNode::attention_point_callback,
       this, _1));
 
-  markers_pub_ = create_publisher<visualization_msgs::msg::MarkerArray>(
-    "/attention_markers", 100);
-
   time_in_pos_ = now();
 
   tfBuffer_ = std::make_shared<tf2::BufferCore>();
@@ -97,7 +93,6 @@ AttentionServerNode::on_activate(const rclcpp_lifecycle::State & state)
   timer_ = create_wall_timer(500ms, std::bind(&AttentionServerNode::update, this));
 
   joint_cmd_pub_->on_activate();
-  markers_pub_->on_activate();
 
   RCLCPP_INFO(get_logger(), "AttentionServerNode activated");
   return CascadeLifecycleNode::on_activate(state);
@@ -250,74 +245,6 @@ AttentionServerNode::init_join_state()
   joint_cmd_.points[0].velocities[1] = NECK_SPEED;
   joint_cmd_.points[0].accelerations[0] = NECK_SPEED;
   joint_cmd_.points[0].accelerations[1] = NECK_SPEED;
-}
-
-
-void
-AttentionServerNode::publish_markers()
-{
-  if (markers_pub_->get_subscription_count() == 0) {
-    RCLCPP_INFO(get_logger(), "No subscribers to markers");
-    return;
-  }
-
-  tf2::Stamped<tf2::Vector3> end_point = attention_points_.begin()->point;
-
-
-  visualization_msgs::msg::MarkerArray msg;
-  visualization_msgs::msg::Marker att_marker;
-
-  att_marker.header.frame_id = "head_front_camera_link";
-  att_marker.header.stamp = now();
-  att_marker.ns = get_name();
-  att_marker.id = 0;
-  att_marker.type = visualization_msgs::msg::Marker::ARROW;
-  att_marker.action = visualization_msgs::msg::Marker::ADD;
-  att_marker.scale.x = 0.01;
-  att_marker.scale.y = 0.1;
-  att_marker.scale.z = 0.1;
-  att_marker.color.b = 0;
-  att_marker.color.g = 0;
-  att_marker.color.r = 255;
-  att_marker.color.a = 1.0;
-  att_marker.lifetime = rclcpp::Duration(5.0s);
-
-  geometry_msgs::msg::Point start, end;
-  start.x = 0.0;
-  start.y = 0.0;
-  start.z = 0.0;
-
-  geometry_msgs::msg::TransformStamped tf_msg;
-  std::string error;
-  if (tfBuffer_->canTransform(
-      end_point.frame_id_, "head_front_camera_link",
-      tf2::TimePointZero, &error))
-  {
-    tf_msg = tfBuffer_->lookupTransform(
-      end_point.frame_id_, "head_front_camera_link",
-      tf2::TimePointZero);
-  } else {
-    RCLCPP_ERROR(get_logger(), "Can't transform %s", error.c_str());
-  }
-
-  tf2::Transform tf;
-  tf2::Stamped<tf2::Transform> aux;
-  tf2::convert(tf_msg, aux);
-  tf = aux;
-
-  tf2::Vector3 point_end = tf.inverse() * end_point;
-
-  end.x = point_end.x();
-  end.y = point_end.y();
-  end.z = point_end.z();
-
-  att_marker.points.push_back(start);
-  att_marker.points.push_back(end);
-
-
-  msg.markers.push_back(att_marker);
-
-  markers_pub_->publish(msg);
 }
 
 void

@@ -16,10 +16,8 @@
 #include <string>
 
 #include "lifecycle_msgs/msg/transition.hpp"
-#include "attention_system_msgs/msg/pan_tilt_command.hpp"
 
 #include "attention_system/OptimizedAttentionServerNode.hpp"
-#include "attention_system/SimpleAttentionServerNode.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 

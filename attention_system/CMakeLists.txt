@@ -37,8 +37,6 @@ set(dependencies
   tf2_geometry_msgs
   trajectory_msgs
   control_msgs
-  visualization_msgs
-  behaviortree_cpp_v3
 )
 
 include_directories(
@@ -48,26 +46,12 @@ include_directories(
 add_library(${PROJECT_NAME} SHARED
   src/attention_system/AttentionServerNode.cpp
   src/attention_system/OptimizedAttentionServerNode.cpp
-  src/attention_system/RoundRobinAttentionServerNode.cpp
-  src/attention_system/SimpleAttentionServerNode.cpp
-  src/attention_system/PIDController.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
 add_executable(attention_server src/attention_server.cpp)
 ament_target_dependencies(attention_server ${dependencies})
 target_link_libraries(attention_server ${PROJECT_NAME})
-
-add_library(attention_system_scan_bt_node SHARED src/behavior_tree_nodes/Scan.cpp)
-list(APPEND plugin_libs attention_system_scan_bt_node)
-
-add_library(attention_system_track_bt_node SHARED src/behavior_tree_nodes/Track.cpp)
-list(APPEND plugin_libs attention_system_track_bt_node)
-
-foreach(bt_plugin ${plugin_libs})
-  ament_target_dependencies(${bt_plugin} ${dependencies})
-  target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
-endforeach()
 
 
 install(DIRECTORY include/
@@ -91,8 +75,6 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_index_cpp REQUIRED)
-
-  add_subdirectory(tests)
 endif()
 
 ament_export_include_directories(include)

@@ -9,7 +9,6 @@ find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/AttentionPoints.msg"
-  "msg/PanTiltCommand.msg"
   DEPENDENCIES builtin_interfaces std_msgs geometry_msgs
 )
 

@@ -17,7 +17,6 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "control_msgs/action/follow_joint_trajectory.hpp"
-#include "visualization_msgs/msg/marker_array.hpp"
 
 #include "attention_system/OptimizedAttentionServerNode.hpp"
 
