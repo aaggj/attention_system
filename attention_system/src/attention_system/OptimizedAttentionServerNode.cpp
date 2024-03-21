@@ -34,6 +34,10 @@ OptimizedAttentionServerNode::OptimizedAttentionServerNode()
 {
   ts_sent_ = now() - rclcpp::Duration(5, 0);
   time_in_pos_ = now();
+  callback_group_ = this->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
+  callback_group_executor_.add_callback_group(
+    callback_group_, this->get_node_base_interface());
 }
 
 void
@@ -166,10 +170,6 @@ OptimizedAttentionServerNode::update()
     goal_sent_ = true;
     RCLCPP_INFO(get_logger(), "Sending goal");
 
-    callback_group_ = this->create_callback_group(
-      rclcpp::CallbackGroupType::MutuallyExclusive);
-    callback_group_executor_.add_callback_group(
-      callback_group_, this->get_node_base_interface());
 
     callback_group_executor_.spin_some();
     RCLCPP_INFO(get_logger(), "Goal sent, waiting for result");
