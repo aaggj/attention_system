@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.5)
 project(attention_system)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Debug)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -45,7 +44,7 @@ include_directories(
 
 add_library(${PROJECT_NAME} SHARED
   src/attention_system/AttentionServerNode.cpp
-  src/attention_system/OptimizedAttentionServerNode.cpp
+  # src/attention_system/OptimizedAttentionServerNode.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 

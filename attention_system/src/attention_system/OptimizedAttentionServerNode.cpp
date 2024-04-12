@@ -32,7 +32,7 @@ using namespace std::chrono_literals;
 
 OptimizedAttentionServerNode::OptimizedAttentionServerNode()
 {
-  ts_sent_ = now() - rclcpp::Duration(5, 0);
+  ts_sent_ = now() - rclcpp::Duration(5s);
   time_in_pos_ = now();
 }
 
@@ -92,12 +92,11 @@ OptimizedAttentionServerNode::update()
     point.pitch = atan2(point_head_1.z(), point_head_1.x());
   }
 
-  RCLCPP_INFO(get_logger(), "**********************************");
-  if ((now() - ts_sent_).seconds() > 10) {
-    RCLCPP_WARN(get_logger(), "Timeout in attention point. Skipping");
-    RCLCPP_INFO(get_logger(), "Current time: %f", (now() - ts_sent_).seconds());
-    RCLCPP_INFO(get_logger(), "Now time: %f", now().seconds());
-    RCLCPP_INFO(get_logger(), "ts_sent_ time: %f", ts_sent_.seconds());
+  if (now() - ts_sent_ > 10s) {
+    RCLCPP_DEBUG(get_logger(), "Timeout in attention point. Skipping");
+    RCLCPP_DEBUG(get_logger(), "Current time: %f", (now() - ts_sent_).seconds());
+    RCLCPP_DEBUG(get_logger(), "Now time: %f", now().seconds());
+    RCLCPP_DEBUG(get_logger(), "ts_sent_ time: %f", ts_sent_.seconds());
 
   }
 
@@ -107,15 +106,15 @@ OptimizedAttentionServerNode::update()
   double y = attention_points_.begin()->point[1];
   double z = attention_points_.begin()->point[2];
 
-  RCLCPP_INFO(this->get_logger(), "Punto x: %f, y: %f, z: %f", x, y, z);
-  RCLCPP_INFO(
+  RCLCPP_DEBUG(this->get_logger(), "Punto x: %f, y: %f, z: %f", x, y, z);
+  RCLCPP_DEBUG(
     get_logger(), "1st point id : %s",
     attention_points_.begin()->point.frame_id_.c_str());
 
   update_points();
-  RCLCPP_INFO(get_logger(), "Points updated");
+  RCLCPP_DEBUG(get_logger(), "Points updated");
 
-  RCLCPP_INFO(get_logger(), "Markers published");
+  RCLCPP_DEBUG(get_logger(), "Markers published");
 
   goal_yaw_ = std::max(
     -MAX_YAW, std::min(
@@ -152,7 +151,7 @@ OptimizedAttentionServerNode::update()
       if (this->goal_handle_->get_goal_id() == result.goal_id) {
         goal_result_available_ = true;
         result_ = result;
-        RCLCPP_INFO(this->get_logger(), "Goal result received");
+        RCLCPP_DEBUG(this->get_logger(), "Goal result received");
       }
     };
 
@@ -164,7 +163,7 @@ OptimizedAttentionServerNode::update()
     auto future_goal_handle = action_client_->async_send_goal(
       goal_msg);
     goal_sent_ = true;
-    RCLCPP_INFO(get_logger(), "Sending goal");
+    RCLCPP_DEBUG(get_logger(), "Sending goal");
 
     callback_group_ = this->create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -172,13 +171,13 @@ OptimizedAttentionServerNode::update()
       callback_group_, this->get_node_base_interface());
 
     callback_group_executor_.spin_some();
-    RCLCPP_INFO(get_logger(), "Goal sent, waiting for result");
+    RCLCPP_DEBUG(get_logger(), "Goal sent, waiting for result");
 
   } else {
-    RCLCPP_INFO(
+    RCLCPP_WARN(
       get_logger(),
-      "Goal not sent thresold exceeded or goal already sent");
-    RCLCPP_INFO(
+      "Goal not sent thresHold exceeded or goal already sent");
+    RCLCPP_DEBUG(
       get_logger(),
       "dif_yaw: %f, dif_pitch: %f, goal_sent: %d", dif_yaw, dif_pitch,
       goal_sent_);
@@ -193,7 +192,7 @@ OptimizedAttentionServerNode::update()
   last_pitch_ = goal_pitch_;
   last_yaw_ = goal_yaw_;
 
-  RCLCPP_INFO(get_logger(), "OptimizedAttentionServerNode::update() end");
+  RCLCPP_DEBUG(get_logger(), "OptimizedAttentionServerNode::update() end");
 }
 
 
