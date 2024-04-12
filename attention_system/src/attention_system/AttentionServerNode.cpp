@@ -123,6 +123,9 @@ AttentionServerNode::get_py_from_frame(const std::string & frame)
   double yaw = atan2(point_head_1.getOrigin().y(), point_head_1.getOrigin().x());
   double pitch = atan2(point_head_1.getOrigin().z(), point_head_1.getOrigin().x());
 
+  yaw = std::clamp(-MAX_YAW, MAX_YAW, yaw);
+  pitch = std::clamp(-MAX_PITCH, MAX_PITCH, pitch);
+
   return {pitch, yaw, true};
 }
 

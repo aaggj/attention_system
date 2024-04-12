@@ -56,6 +56,9 @@ protected:
   trajectory_msgs::msg::JointTrajectory get_command_to_angles(
     double pitch, double yaw, const rclcpp::Duration time2pos = 100ms);
 
+  static constexpr double MAX_YAW = 1.3;
+  static constexpr double MAX_PITCH = 0.185;
+
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
