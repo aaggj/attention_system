@@ -27,6 +27,7 @@ int main(int argc, char ** argv)
 
   auto attention_server_node = std::make_shared<attention_system::AttentionServerNode>();
   attention_server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  attention_server_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
 
   rclcpp::spin(attention_server_node->get_node_base_interface());
   return 0;

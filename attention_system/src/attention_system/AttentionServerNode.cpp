@@ -41,6 +41,11 @@ using namespace std::chrono_literals;
 AttentionServerNode::AttentionServerNode(const rclcpp::NodeOptions & options)
 : CascadeLifecycleNode("attention_server", options)
 {
+  declare_parameter("period", 0.050);
+  declare_parameter("max_yaw", max_yaw_);
+  declare_parameter("max_pitch", max_pitch_);
+  declare_parameter("max_vel_yaw", max_vel_yaw_);
+  declare_parameter("max_vel_pitch", max_vel_pitch_);
 }
 
 using CallbackReturnT =
@@ -49,11 +54,23 @@ using CallbackReturnT =
 CallbackReturnT
 AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
 {
+  double period;
+  get_parameter("period", period);
+  period_ = rclcpp::Duration::from_seconds(period);
+
+  get_parameter("max_yaw", max_yaw_);
+  get_parameter("max_pitch", max_pitch_);
+  get_parameter("max_vel_yaw", max_vel_yaw_);
+  get_parameter("max_vel_pitch", max_vel_pitch_);
+
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
   joint_cmd_pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>(
     "/head_controller/joint_trajectory", 100);
+  joint_sub_ = create_subscription<control_msgs::msg::JointTrajectoryControllerState>(
+    "/head_controller/state", rclcpp::SensorDataQoS().reliable(),
+    std::bind(&AttentionServerNode::joint_state_callback, this, _1));
 
   attention_command_sub_ = create_subscription<attention_system_msgs::msg::AttentionCommand>(
     "attention/attention_command", 100, std::bind(
@@ -66,7 +83,11 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 AttentionServerNode::on_activate(const rclcpp_lifecycle::State & state)
 {
-  timer_ = create_wall_timer(100ms, std::bind(&AttentionServerNode::update, this));
+  auto joint_trajectory_msg = get_command_to_angles(0.0, 0.0, 1s);
+  joint_cmd_pub_->publish(joint_trajectory_msg);
+
+  timer_ = create_wall_timer(
+    period_.to_chrono<std::chrono::nanoseconds>(), std::bind(&AttentionServerNode::update, this));
   joint_cmd_pub_->on_activate();
 
   return CascadeLifecycleNode::on_activate(state);
@@ -123,15 +144,30 @@ AttentionServerNode::get_py_from_frame(const std::string & frame)
   double yaw = atan2(point_head_1.getOrigin().y(), point_head_1.getOrigin().x());
   double pitch = atan2(point_head_1.getOrigin().z(), point_head_1.getOrigin().x());
 
-  yaw = std::clamp(-MAX_YAW, MAX_YAW, yaw);
-  pitch = std::clamp(-MAX_PITCH, MAX_PITCH, pitch);
+  yaw = std::clamp(yaw, -max_yaw_, max_yaw_);
+  pitch = std::clamp(pitch, -max_pitch_, max_pitch_);
 
   return {pitch, yaw, true};
 }
 
-trajectory_msgs::msg::JointTrajectory
-AttentionServerNode::get_command_to_angles(double pitch, double yaw, const rclcpp::Duration time2pos)
+void
+AttentionServerNode::joint_state_callback(
+  control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg)
 {
+  current_yaw_ = msg->actual.positions[0];
+  current_pitch_ = msg->actual.positions[1];
+}
+
+trajectory_msgs::msg::JointTrajectory
+AttentionServerNode::get_command_to_angles(
+  double yaw, double pitch, const rclcpp::Duration time2pos)
+{
+  double limit_yaw = max_vel_yaw_ * time2pos.seconds();
+  double limit_pitch = max_vel_pitch_ * time2pos.seconds();
+
+  double delta_yaw = std::clamp(yaw - current_yaw_, -limit_yaw, limit_yaw);
+  double delta_pitch = std::clamp(pitch - current_pitch_, -limit_pitch, limit_pitch);
+
   trajectory_msgs::msg::JointTrajectory command_msg;
   command_msg.header.stamp = now();
   command_msg.joint_names = std::vector<std::string>{"head_1_joint", "head_2_joint"};
@@ -139,10 +175,10 @@ AttentionServerNode::get_command_to_angles(double pitch, double yaw, const rclcp
   command_msg.points[0].positions.resize(2);
   command_msg.points[0].velocities.resize(2);
   command_msg.points[0].accelerations.resize(2);
-  command_msg.points[0].positions[0] = yaw;
-  command_msg.points[0].positions[1] = pitch;
-  command_msg.points[0].velocities[0] = 0.1;
-  command_msg.points[0].velocities[1] = 0.1;
+  command_msg.points[0].positions[0] = current_yaw_ + delta_yaw;
+  command_msg.points[0].positions[1] = current_pitch_ + delta_pitch;
+  command_msg.points[0].velocities[0] = max_vel_yaw_;
+  command_msg.points[0].velocities[1] = max_vel_pitch_;
   command_msg.points[0].accelerations[0] = 0.1;
   command_msg.points[0].accelerations[1] = 0.1;
   command_msg.points[0].time_from_start = time2pos;
@@ -153,11 +189,12 @@ AttentionServerNode::get_command_to_angles(double pitch, double yaw, const rclcp
 void
 AttentionServerNode::update()
 {
+  if (attention_frame_ == "") {return;}
+
   auto [pitch, yaw, success] = get_py_from_frame(attention_frame_);
 
   if (success) {
-    RCLCPP_DEBUG_STREAM(get_logger(), "frame (" << pitch << ", " << yaw << ")");
-    auto joint_trajectory_msg = get_command_to_angles(pitch, yaw);
+    auto joint_trajectory_msg = get_command_to_angles(yaw, pitch, period_);
     joint_cmd_pub_->publish(joint_trajectory_msg);
   }
 }

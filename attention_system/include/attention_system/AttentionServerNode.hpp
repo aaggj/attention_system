@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ATTENTION_SYSTEM__ATTENTIONSERVER_H
-#define ATTENTION_SYSTEM__ATTENTIONSERVER_H
+#ifndef ATTENTION_SYSTEM__ATTENTIONSERVERNODE_HPP_
+#define ATTENTION_SYSTEM__ATTENTIONSERVERNODE_HPP_
 
-
+#include <tuple>
+#include <memory>
 #include <list>
 #include <string>
 
@@ -25,15 +26,16 @@
 
 #include "attention_system_msgs/msg/attention_command.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
+#include "control_msgs/msg/joint_trajectory_controller_state.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_cascade_lifecycle/rclcpp_cascade_lifecycle.hpp"
 
-using namespace std::chrono_literals;
 
 namespace attention_system
 {
 
+using namespace std::chrono_literals;  // NOLINT
 
 class AttentionServerNode : public rclcpp_cascade_lifecycle::CascadeLifecycleNode
 {
@@ -52,25 +54,32 @@ public:
 protected:
   void attention_command_callback(
     attention_system_msgs::msg::AttentionCommand::SharedPtr msg);
+  void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
+
   std::tuple<double, double, bool> get_py_from_frame(const std::string & frame);
   trajectory_msgs::msg::JointTrajectory get_command_to_angles(
-    double pitch, double yaw, const rclcpp::Duration time2pos = 100ms);
-
-  static constexpr double MAX_YAW = 1.3;
-  static constexpr double MAX_PITCH = 0.185;
+    double yaw, double pitch, const rclcpp::Duration time2pos);
 
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   rclcpp_lifecycle::LifecyclePublisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr
     joint_cmd_pub_;
-  rclcpp::Subscription< attention_system_msgs::msg::AttentionCommand>::SharedPtr
+  rclcpp::Subscription<attention_system_msgs::msg::AttentionCommand>::SharedPtr
     attention_command_sub_;
+  rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr joint_sub_;
 
   std::string attention_frame_;
   rclcpp::TimerBase::SharedPtr timer_;
+
+  rclcpp::Duration period_ {50ms};
+  double current_yaw_ {0.0}, current_pitch_{0.0};
+  double max_yaw_ {1.3};
+  double max_pitch_ {0.185};
+  double max_vel_yaw_ {0.5};  // rad/sec
+  double max_vel_pitch_ {0.5};  // rad/sec
 };
 
 }   // namespace attention_system
 
-#endif  // ATTENTION_SYSTEM__ATTENTIONSERVER_H
+#endif  // ATTENTION_SYSTEM__ATTENTIONSERVERNODE_HPP_
