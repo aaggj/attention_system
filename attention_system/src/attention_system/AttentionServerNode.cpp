@@ -27,7 +27,6 @@
 
 #include "attention_system/AttentionServerNode.hpp"
 
-
 #include "rclcpp/rclcpp.hpp"
 
 namespace attention_system
@@ -169,19 +168,15 @@ AttentionServerNode::get_command_to_angles(
   double delta_pitch = std::clamp(pitch - current_pitch_, -limit_pitch, limit_pitch);
 
   trajectory_msgs::msg::JointTrajectory command_msg;
-  command_msg.header.stamp = now();
+
   command_msg.joint_names = std::vector<std::string>{"head_1_joint", "head_2_joint"};
   command_msg.points.resize(1);
   command_msg.points[0].positions.resize(2);
   command_msg.points[0].velocities.resize(2);
   command_msg.points[0].accelerations.resize(2);
-  command_msg.points[0].positions[0] = current_yaw_ + delta_yaw;
-  command_msg.points[0].positions[1] = current_pitch_ + delta_pitch;
-  command_msg.points[0].velocities[0] = max_vel_yaw_;
-  command_msg.points[0].velocities[1] = max_vel_pitch_;
-  command_msg.points[0].accelerations[0] = 0.1;
-  command_msg.points[0].accelerations[1] = 0.1;
-  command_msg.points[0].time_from_start = time2pos;
+  command_msg.points[0].positions[0] = yaw ;
+  command_msg.points[0].positions[1] = pitch;
+  command_msg.points[0].time_from_start = rclcpp::Duration::from_seconds(0.00);
 
   return command_msg;
 }
