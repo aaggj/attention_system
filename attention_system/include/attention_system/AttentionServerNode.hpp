@@ -78,6 +78,7 @@ protected:
   double max_pitch_ {0.185};
   double max_vel_yaw_ {0.5};  // rad/sec
   double max_vel_pitch_ {0.5};  // rad/sec
+  double rotation_threshold_ {0.436332};  // 25 degrees
 };
 
 }   // namespace attention_system

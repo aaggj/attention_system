@@ -45,6 +45,7 @@ AttentionServerNode::AttentionServerNode(const rclcpp::NodeOptions & options)
   declare_parameter("max_pitch", max_pitch_);
   declare_parameter("max_vel_yaw", max_vel_yaw_);
   declare_parameter("max_vel_pitch", max_vel_pitch_);
+  declare_parameter("rotation_threshold", 0.436332 ); //25 degrees
 }
 
 using CallbackReturnT =
@@ -61,6 +62,7 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
   get_parameter("max_pitch", max_pitch_);
   get_parameter("max_vel_yaw", max_vel_yaw_);
   get_parameter("max_vel_pitch", max_vel_pitch_);
+  get_parameter("rotation_threshold", rotation_threshold_);
 
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -174,8 +176,8 @@ AttentionServerNode::get_command_to_angles(
   command_msg.points[0].positions.resize(2);
   command_msg.points[0].velocities.resize(2);
   command_msg.points[0].accelerations.resize(2);
-  command_msg.points[0].positions[0] = yaw ;
-  command_msg.points[0].positions[1] = pitch;
+  command_msg.points[0].positions[0] = (std::abs(delta_yaw) < rotation_threshold_) ? yaw : (current_yaw_);
+  command_msg.points[0].positions[1] = (std::abs(delta_pitch) < rotation_threshold_) ? pitch : (current_pitch_);
   command_msg.points[0].time_from_start = rclcpp::Duration::from_seconds(0.00);
 
   return command_msg;
