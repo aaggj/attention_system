@@ -6,3 +6,4 @@ attention_server:
     max_pitch: 0.185
     max_vel_yaw: 1.0
     max_vel_pitch: 1.0
+    rotation_threshold: 0.436332 # 25 degrees
