@@ -85,7 +85,7 @@ CallbackReturnT
 AttentionServerNode::on_activate(const rclcpp_lifecycle::State & state)
 {
   auto joint_trajectory_msg = get_command_to_angles(0.0, 0.0, 1s);
-  joint_cmd_pub_->publish(joint_trajectory_msg);
+  // joint_cmd_pub_->publish(joint_trajectory_msg);
 
   timer_ = create_wall_timer(
     period_.to_chrono<std::chrono::nanoseconds>(), std::bind(&AttentionServerNode::update, this));
