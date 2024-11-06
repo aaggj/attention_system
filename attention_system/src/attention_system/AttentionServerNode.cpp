@@ -155,8 +155,8 @@ void
 AttentionServerNode::joint_state_callback(
   control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg)
 {
-  current_yaw_ = msg->actual.positions[0];
-  current_pitch_ = msg->actual.positions[1];
+  current_yaw_ = msg->feedback.positions[0];
+  current_pitch_ = msg->feedback.positions[1];
 }
 
 trajectory_msgs::msg::JointTrajectory
