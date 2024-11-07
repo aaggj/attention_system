@@ -24,6 +24,7 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <control_msgs/msg/joint_trajectory_controller_state.hpp>
 #include "geometry_msgs/msg/point_stamped.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 
 #include "attention_system/AttentionServerNode.hpp"
 
@@ -69,8 +70,8 @@ AttentionServerNode::on_configure(const rclcpp_lifecycle::State & state)
 
   joint_cmd_pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>(
     "/head_controller/joint_trajectory", 100);
-  joint_sub_ = create_subscription<control_msgs::msg::JointTrajectoryControllerState>(
-    "/head_controller/state", rclcpp::SensorDataQoS().reliable(),
+  joint_sub_ = create_subscription<sensor_msgs::msg::JointState>(
+    "joint_states", rclcpp::SensorDataQoS().reliable(),
     std::bind(&AttentionServerNode::joint_state_callback, this, _1));
 
   attention_command_sub_ = create_subscription<attention_system_msgs::msg::AttentionCommand>(
@@ -153,10 +154,10 @@ AttentionServerNode::get_py_from_frame(const std::string & frame)
 
 void
 AttentionServerNode::joint_state_callback(
-  control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg)
+  sensor_msgs::msg::JointState::UniquePtr msg)
 {
-  current_yaw_ = msg->feedback.positions[0];
-  current_pitch_ = msg->feedback.positions[1];
+  current_yaw_ = msg->position[10];
+  current_pitch_ = msg->position[9];
 }
 
 trajectory_msgs::msg::JointTrajectory
