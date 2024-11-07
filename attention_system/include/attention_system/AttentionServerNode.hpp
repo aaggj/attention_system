@@ -27,6 +27,7 @@
 #include "attention_system_msgs/msg/attention_command.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
 #include "control_msgs/msg/joint_trajectory_controller_state.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_cascade_lifecycle/rclcpp_cascade_lifecycle.hpp"
@@ -54,7 +55,7 @@ public:
 protected:
   void attention_command_callback(
     attention_system_msgs::msg::AttentionCommand::SharedPtr msg);
-  void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
+  void joint_state_callback(sensor_msgs::msg::JointState::UniquePtr msg);
 
   std::tuple<double, double, bool> get_py_from_frame(const std::string & frame);
   trajectory_msgs::msg::JointTrajectory get_command_to_angles(
@@ -67,7 +68,7 @@ protected:
     joint_cmd_pub_;
   rclcpp::Subscription<attention_system_msgs::msg::AttentionCommand>::SharedPtr
     attention_command_sub_;
-  rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr joint_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_sub_;
 
   std::string attention_frame_;
   rclcpp::TimerBase::SharedPtr timer_;
